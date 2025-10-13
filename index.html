@@ -52,6 +52,10 @@
             border-radius: 9999px; /* Pill shape */
             font-weight: 600;
         }
+        /* Estilo para o modal */
+        #edit-modal {
+            backdrop-filter: blur(5px);
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -75,9 +79,9 @@
             </select>
         </div>
 
-        <!-- Filtro por Data (Calendário) -->
+        <!-- Filtro por Data (Previsão de Conclusão) -->
         <div class="flex flex-col w-full sm:w-auto flex-1 min-w-[200px]">
-            <label for="filter-date" class="text-sm font-medium text-gray-600 mb-1">Filtrar por Data (Registro/Previsão)</label>
+            <label for="filter-date" class="text-sm font-medium text-gray-600 mb-1">Filtrar por Data (Previsão)</label>
             <input type="date" id="filter-date" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-slate-500 focus:border-slate-500 transition duration-200 shadow-inner">
         </div>
 
@@ -138,11 +142,17 @@
                     <option value="proximos">Próximos Processos</option>
                 </select>
             </div>
-
-            <!-- Campo Data -->
+            
+            <!-- Campo Data de Registro (Pré-preenchido para hoje) -->
             <div class="col-span-1">
-                <label for="data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro/Previsão</label>
+                <label for="data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro</label>
                 <input type="date" id="data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
+            </div>
+
+            <!-- Campo Data de Previsão -->
+            <div class="col-span-1">
+                <label for="data-previsao" class="block text-sm font-semibold text-gray-700">Data de Previsão (Conclusão)</label>
+                <input type="date" id="data-previsao" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
             </div>
             
             <!-- Campo Nome do Processo -->
@@ -166,6 +176,70 @@
         </form>
     </div>
 
+    <!-- Modal de Edição (Inicialmente escondido) -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-75 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-3xl p-8 w-full max-w-lg border-t-8 border-slate-600 relative">
+                <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></svg>
+                </button>
+                <h2 class="text-2xl font-black text-slate-700 mb-6">✏️ Editar Processo</h2>
+                
+                <form id="edit-form" onsubmit="handleEditSubmit(event)">
+                    <input type="hidden" id="edit-id">
+                    
+                    <!-- Nome do Processo -->
+                    <div class="mb-4">
+                        <label for="edit-nome" class="block text-sm font-semibold text-gray-700">Nome do Processo/Tarefa</label>
+                        <input type="text" id="edit-nome" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
+                    </div>
+
+                    <!-- Colaborador e Status -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="edit-colaborador" class="block text-sm font-semibold text-gray-700">Colaborador</label>
+                            <select id="edit-colaborador" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
+                                <!-- Opções preenchidas pelo JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="edit-status" class="block text-sm font-semibold text-gray-700">Status</label>
+                            <select id="edit-status" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
+                                <option value="tratamento">Em Tratamento</option>
+                                <option value="tratados">Tratados na Semana</option>
+                                <option value="proximos">Próximos Processos</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Datas -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="edit-data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro</label>
+                            <input type="date" id="edit-data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
+                        </div>
+                        <div>
+                            <label for="edit-data-previsao" class="block text-sm font-semibold text-gray-700">Data de Previsão</label>
+                            <input type="date" id="edit-data-previsao" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
+                        </div>
+                    </div>
+
+                    <!-- Detalhes -->
+                    <div class="mb-6">
+                        <label for="edit-detalhes" class="block text-sm font-semibold text-gray-700">Detalhes/Descrição</label>
+                        <textarea id="edit-detalhes" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 h-24 shadow-sm"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeEditModal()" class="bg-gray-200 text-gray-700 hover:bg-gray-300 font-bold py-2 px-4 rounded-xl transition duration-150 shadow-md">Cancelar</button>
+                        <button type="submit" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition duration-150">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
     <!-- LÓGICA JAVASCRIPT -->
     <script>
         // Lista de colaboradores em ordem alfabética
@@ -175,6 +249,11 @@
         ];
 
         let processos = [];
+
+        // Função auxiliar para obter a data de hoje formatada (YYYY-MM-DD)
+        function getTodayDateString() {
+            return new Date().toISOString().split('T')[0];
+        }
 
         // ------------------ Funções de Persistência (localStorage) ------------------
 
@@ -191,7 +270,14 @@
             try {
                 const storedProcesses = localStorage.getItem('processosDashboard');
                 if (storedProcesses) {
-                    processos = JSON.parse(storedProcesses);
+                    const loaded = JSON.parse(storedProcesses);
+                    // Atualiza a estrutura de dados de itens antigos para incluir dataRegistro/dataPrevisao
+                    processos = loaded.map(p => ({
+                        // Se for um processo antigo (só tinha 'data'), usa 'data' para ambos.
+                        dataRegistro: p.dataRegistro || p.data || getTodayDateString(), 
+                        dataPrevisao: p.dataPrevisao || p.data || getTodayDateString(),
+                        ...p,
+                    }));
                 }
             } catch (e) {
                 console.error("Erro ao carregar dados do localStorage:", e);
@@ -204,18 +290,20 @@
         function setupCollaboratorSelects() {
             const selects = [
                 document.getElementById('filter-colaborador'),
-                document.getElementById('colaborador')
+                document.getElementById('colaborador'),
+                document.getElementById('edit-colaborador') // Adicionado para o modal de edição
             ];
+
+            // Define o valor padrão para a Data de Registro como a data atual
+            document.getElementById('data-registro').value = getTodayDateString();
 
             colaboradores.forEach(nome => {
                 const option = document.createElement('option');
                 option.value = nome;
                 option.textContent = nome;
 
-                // Adiciona a opção de filtro (além do "Todos")
-                selects[0].appendChild(option.cloneNode(true)); 
-                // Adiciona a opção no formulário de cadastro
-                selects[1].appendChild(option); 
+                // Adiciona a opção em todos os selects
+                selects.forEach(select => select.appendChild(option.cloneNode(true)));
             });
         }
 
@@ -224,29 +312,37 @@
             // Classes Tailwind para visual
             card.className = `task-card bg-white p-4 rounded-xl shadow-lg mb-4 text-sm status-${processo.status}`;
             
-            // Atributos para facilitar a filtragem
+            // Atributos para facilitar a filtragem (usando dataPrevisao para o filtro de data)
             card.setAttribute('data-colaborador', processo.colaborador);
-            card.setAttribute('data-data', processo.data);
+            card.setAttribute('data-previsao', processo.dataPrevisao);
             card.setAttribute('data-status', processo.status);
 
-            // Formatação da data para BR
-            const dataFormatada = new Date(processo.data).toLocaleDateString('pt-BR');
+            // Formatação da data de previsão para BR
+            const previsaoFormatada = new Date(processo.dataPrevisao).toLocaleDateString('pt-BR');
 
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
                     <div class="font-extrabold text-gray-800 text-base">${processo.nome}</div>
-                    <!-- Botão de Exclusão -->
-                    <button onclick="deleteProcess(${processo.id})" title="Excluir Processo" class="text-gray-400 hover:text-red-600 transition duration-150 p-1 rounded-full focus:outline-none">
-                        <!-- Ícone de Lixeira (Trash Icon SVG) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
+                    <div class="flex space-x-2">
+                        <!-- Botão de Edição -->
+                        <button onclick="openEditModal(${processo.id})" title="Editar Processo" class="text-gray-400 hover:text-slate-600 transition duration-150 p-1 rounded-full focus:outline-none">
+                            <!-- Ícone de Lápis (Edit Icon SVG) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        <!-- Botão de Exclusão -->
+                        <button onclick="deleteProcess(${processo.id})" title="Excluir Processo" class="text-gray-400 hover:text-red-600 transition duration-150 p-1 rounded-full focus:outline-none">
+                            <!-- Ícone de Lixeira (Trash Icon SVG) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex justify-between items-center mb-2">
                     <div class="text-xs text-gray-500">Colab: <span class="font-bold text-gray-700">${processo.colaborador}</span></div>
-                    <span class="card-date text-xs">${dataFormatada}</span>
+                    <span class="card-date text-xs" title="Previsão de Conclusão">Prev.: ${previsaoFormatada}</span>
                 </div>
+                <div class="text-xs text-gray-400 mt-1">Registro: ${new Date(processo.dataRegistro).toLocaleDateString('pt-BR')}</div>
                 <div class="text-gray-600 whitespace-pre-wrap mt-3 pt-3 border-t border-gray-100">${processo.detalhes}</div>
             `;
             return card;
@@ -282,6 +378,61 @@
             filterCards(); // Aplica os filtros atuais após a renderização
         }
 
+        // ------------------ Funções de Edição ------------------
+
+        function openEditModal(id) {
+            const processo = processos.find(p => p.id === id);
+            if (!processo) {
+                console.error(`Processo com ID ${id} não encontrado para edição.`);
+                return;
+            }
+
+            // Preenche o formulário do modal com os dados do processo
+            document.getElementById('edit-id').value = processo.id;
+            document.getElementById('edit-nome').value = processo.nome;
+            document.getElementById('edit-colaborador').value = processo.colaborador;
+            document.getElementById('edit-status').value = processo.status;
+            document.getElementById('edit-data-registro').value = processo.dataRegistro;
+            document.getElementById('edit-data-previsao').value = processo.dataPrevisao;
+            document.getElementById('edit-detalhes').value = processo.detalhes;
+
+            // Mostra o modal
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function handleEditSubmit(e) {
+            e.preventDefault();
+
+            const id = parseInt(document.getElementById('edit-id').value);
+            const index = processos.findIndex(p => p.id === id);
+
+            if (index === -1) {
+                console.error(`Erro ao salvar: Processo com ID ${id} não encontrado.`);
+                return;
+            }
+
+            // Atualiza o objeto processo
+            processos[index] = {
+                ...processos[index], // Mantém outras propriedades (como o ID)
+                colaborador: document.getElementById('edit-colaborador').value,
+                status: document.getElementById('edit-status').value,
+                nome: document.getElementById('edit-nome').value,
+                dataRegistro: document.getElementById('edit-data-registro').value,
+                dataPrevisao: document.getElementById('edit-data-previsao').value,
+                detalhes: document.getElementById('edit-detalhes').value || 'Nenhum detalhe fornecido.',
+            };
+
+            saveProcesses();
+            renderDashboard();
+            closeEditModal();
+            console.log(`Processo ${id} editado com sucesso.`);
+        }
+
+
         // ------------------ Funções de Ação (Excluir) ------------------
 
         function deleteProcess(id) {
@@ -307,7 +458,8 @@
 
             allCards.forEach(card => {
                 const cardColab = card.getAttribute('data-colaborador');
-                const cardDate = card.getAttribute('data-data');
+                // O filtro de data agora usa a data de Previsão
+                const cardPrevisao = card.getAttribute('data-previsao'); 
                 let matches = true;
 
                 // 1. Filtro por Colaborador
@@ -315,8 +467,8 @@
                     matches = false;
                 }
 
-                // 2. Filtro por Data (se a data do filtro for definida, deve corresponder à data do card)
-                if (filterDate && cardDate !== filterDate) {
+                // 2. Filtro por Data (se a data do filtro for definida, deve corresponder à data de Previsão do card)
+                if (filterDate && cardPrevisao !== filterDate) {
                     matches = false;
                 }
 
@@ -330,7 +482,7 @@
             filterCards();
         }
 
-        // ------------------ Manipulação do Formulário ------------------
+        // ------------------ Manipulação do Formulário (Registro) ------------------
 
         document.getElementById('process-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -339,7 +491,8 @@
                 colaborador: document.getElementById('colaborador').value,
                 status: document.getElementById('processo-status').value,
                 nome: document.getElementById('processo-nome').value,
-                data: document.getElementById('data-registro').value,
+                dataRegistro: document.getElementById('data-registro').value, // Nova propriedade
+                dataPrevisao: document.getElementById('data-previsao').value, // Nova propriedade
                 detalhes: document.getElementById('detalhes').value || 'Nenhum detalhe fornecido.',
                 id: Date.now() // ID único
             };
@@ -348,10 +501,11 @@
             saveProcesses();
             renderDashboard();
             
-            // Limpa campos específicos do formulário
+            // Limpa campos específicos do formulário e redefine a data de registro
             document.getElementById('processo-nome').value = '';
-            document.getElementById('data-registro').value = '';
+            document.getElementById('data-previsao').value = ''; // Limpa previsão
             document.getElementById('detalhes').value = '';
+            document.getElementById('data-registro').value = getTodayDateString(); // Volta para hoje
             
             console.log(`Processo "${novoProcesso.nome}" adicionado para ${novoProcesso.colaborador}!`);
         });
@@ -361,23 +515,23 @@
         // Define alguns dados iniciais se não houver nada salvo no localStorage
         function setInitialData() {
             if (processos.length === 0) {
-                // Ajustando as datas de exemplo para que o filtro de calendário funcione bem
-                const today = new Date().toISOString().split('T')[0];
+                // Ajustando as datas de exemplo
+                const today = getTodayDateString();
                 const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
                 const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
                 processos = [
-                    { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos', data: today, detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta.', id: 1 },
-                    { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', data: yesterday, detalhes: 'Migração para novo ambiente AWS concluída com sucesso.', id: 2 },
-                    { colaborador: 'Emily', status: 'proximos', nome: 'Planejamento de Campanha Q4', data: nextWeek, detalhes: 'Definir budget, criar criativos e segmentar público-alvo.', id: 3 },
-                    { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', data: today, detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
+                    { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos', dataRegistro: yesterday, dataPrevisao: today, detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta.', id: 1 },
+                    { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', dataRegistro: yesterday, dataPrevisao: yesterday, detalhes: 'Migração para novo ambiente AWS concluída com sucesso.', id: 2 },
+                    { colaborador: 'Emily', status: 'proximos', nome: 'Planejamento de Campanha Q4', dataRegistro: today, dataPrevisao: nextWeek, detalhes: 'Definir budget, criar criativos e segmentar público-alvo.', id: 3 },
+                    { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', dataRegistro: today, dataPrevisao: today, detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
                 ];
             }
         }
 
 
         document.addEventListener('DOMContentLoaded', () => {
-            setupCollaboratorSelects(); // Popula os <select>
+            setupCollaboratorSelects(); // Popula os <select> e define data de registro
             loadProcesses(); // Carrega dados salvos
             setInitialData(); // Adiciona dados de exemplo se não houver dados salvos
             renderDashboard(); // Renderiza a tela
