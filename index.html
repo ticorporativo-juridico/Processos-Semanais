@@ -149,10 +149,10 @@
                 <input type="date" id="data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
             </div>
 
-            <!-- Campo Data de Previsão -->
+            <!-- Campo Data de Previsão (AGORA NÃO É OBRIGATÓRIO) -->
             <div class="col-span-1">
-                <label for="data-previsao" class="block text-sm font-semibold text-gray-700">Data de Previsão (Conclusão)</label>
-                <input type="date" id="data-previsao" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
+                <label for="data-previsao" class="block text-sm font-semibold text-gray-700">Data de Previsão (Conclusão) - Opcional</label>
+                <input type="date" id="data-previsao" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
             </div>
             
             <!-- Campo Nome do Processo -->
@@ -219,8 +219,8 @@
                             <input type="date" id="edit-data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
                         </div>
                         <div>
-                            <label for="edit-data-previsao" class="block text-sm font-semibold text-gray-700">Data de Previsão</label>
-                            <input type="date" id="edit-data-previsao" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
+                            <label for="edit-data-previsao" class="block text-sm font-semibold text-gray-700">Data de Previsão - Opcional</label>
+                            <input type="date" id="edit-data-previsao" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
                         </div>
                     </div>
 
@@ -274,8 +274,9 @@
                     // Atualiza a estrutura de dados de itens antigos para incluir dataRegistro/dataPrevisao
                     processos = loaded.map(p => ({
                         // Se for um processo antigo (só tinha 'data'), usa 'data' para ambos.
+                        // Garante que todos os processos tenham dataRegistro e dataPrevisao (mesmo que vazias)
                         dataRegistro: p.dataRegistro || p.data || getTodayDateString(), 
-                        dataPrevisao: p.dataPrevisao || p.data || getTodayDateString(),
+                        dataPrevisao: p.dataPrevisao || p.data || '', // Garante string vazia se não definida
                         ...p,
                     }));
                 }
@@ -291,7 +292,7 @@
             const selects = [
                 document.getElementById('filter-colaborador'),
                 document.getElementById('colaborador'),
-                document.getElementById('edit-colaborador') // Adicionado para o modal de edição
+                document.getElementById('edit-colaborador')
             ];
 
             // Define o valor padrão para a Data de Registro como a data atual
@@ -314,11 +315,21 @@
             
             // Atributos para facilitar a filtragem (usando dataPrevisao para o filtro de data)
             card.setAttribute('data-colaborador', processo.colaborador);
-            card.setAttribute('data-previsao', processo.dataPrevisao);
+            card.setAttribute('data-previsao', processo.dataPrevisao || '');
             card.setAttribute('data-status', processo.status);
 
-            // Formatação da data de previsão para BR
-            const previsaoFormatada = new Date(processo.dataPrevisao).toLocaleDateString('pt-BR');
+            // Formatação da data de previsão para BR ou texto "Indefinida"
+            let previsaoDisplay = 'Indefinida';
+            if (processo.dataPrevisao) {
+                // Tenta formatar a data, se for válida
+                const dateObj = new Date(processo.dataPrevisao);
+                if (!isNaN(dateObj)) {
+                    previsaoDisplay = dateObj.toLocaleDateString('pt-BR');
+                } else {
+                    previsaoDisplay = 'Data Inválida';
+                }
+            }
+
 
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
@@ -340,7 +351,7 @@
                 </div>
                 <div class="flex justify-between items-center mb-2">
                     <div class="text-xs text-gray-500">Colab: <span class="font-bold text-gray-700">${processo.colaborador}</span></div>
-                    <span class="card-date text-xs" title="Previsão de Conclusão">Prev.: ${previsaoFormatada}</span>
+                    <span class="card-date text-xs" title="Previsão de Conclusão">Prev.: ${previsaoDisplay}</span>
                 </div>
                 <div class="text-xs text-gray-400 mt-1">Registro: ${new Date(processo.dataRegistro).toLocaleDateString('pt-BR')}</div>
                 <div class="text-gray-600 whitespace-pre-wrap mt-3 pt-3 border-t border-gray-100">${processo.detalhes}</div>
@@ -393,7 +404,10 @@
             document.getElementById('edit-colaborador').value = processo.colaborador;
             document.getElementById('edit-status').value = processo.status;
             document.getElementById('edit-data-registro').value = processo.dataRegistro;
-            document.getElementById('edit-data-previsao').value = processo.dataPrevisao;
+            
+            // Define o valor do campo de data de previsão, pode ser vazio
+            document.getElementById('edit-data-previsao').value = processo.dataPrevisao || ''; 
+            
             document.getElementById('edit-detalhes').value = processo.detalhes;
 
             // Mostra o modal
@@ -415,6 +429,9 @@
                 return;
             }
 
+            // Obtém o valor da data de previsão. Se estiver vazia, salva como string vazia.
+            const dataPrevisao = document.getElementById('edit-data-previsao').value.trim();
+
             // Atualiza o objeto processo
             processos[index] = {
                 ...processos[index], // Mantém outras propriedades (como o ID)
@@ -422,7 +439,7 @@
                 status: document.getElementById('edit-status').value,
                 nome: document.getElementById('edit-nome').value,
                 dataRegistro: document.getElementById('edit-data-registro').value,
-                dataPrevisao: document.getElementById('edit-data-previsao').value,
+                dataPrevisao: dataPrevisao, // Salva o valor (pode ser string vazia)
                 detalhes: document.getElementById('edit-detalhes').value || 'Nenhum detalhe fornecido.',
             };
 
@@ -468,6 +485,7 @@
                 }
 
                 // 2. Filtro por Data (se a data do filtro for definida, deve corresponder à data de Previsão do card)
+                // Se o filtro de data está preenchido, o card deve ter a mesma data. Se o card tem data vazia, não corresponde.
                 if (filterDate && cardPrevisao !== filterDate) {
                     matches = false;
                 }
@@ -487,12 +505,15 @@
         document.getElementById('process-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Obtém a data de previsão. Se não for preenchida, salva como string vazia.
+            const dataPrevisaoValue = document.getElementById('data-previsao').value.trim();
+
             const novoProcesso = {
                 colaborador: document.getElementById('colaborador').value,
                 status: document.getElementById('processo-status').value,
                 nome: document.getElementById('processo-nome').value,
-                dataRegistro: document.getElementById('data-registro').value, // Nova propriedade
-                dataPrevisao: document.getElementById('data-previsao').value, // Nova propriedade
+                dataRegistro: document.getElementById('data-registro').value,
+                dataPrevisao: dataPrevisaoValue, // Salva o valor (pode ser string vazia)
                 detalhes: document.getElementById('detalhes').value || 'Nenhum detalhe fornecido.',
                 id: Date.now() // ID único
             };
@@ -521,10 +542,14 @@
                 const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
                 processos = [
+                    // Exemplo com data de previsão
                     { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos', dataRegistro: yesterday, dataPrevisao: today, detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta.', id: 1 },
-                    { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', dataRegistro: yesterday, dataPrevisao: yesterday, detalhes: 'Migração para novo ambiente AWS concluída com sucesso.', id: 2 },
+                    // Exemplo SEM data de previsão
+                    { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', dataRegistro: yesterday, dataPrevisao: '', detalhes: 'Migração para novo ambiente AWS concluída com sucesso.', id: 2 },
+                    // Exemplo com data de previsão
                     { colaborador: 'Emily', status: 'proximos', nome: 'Planejamento de Campanha Q4', dataRegistro: today, dataPrevisao: nextWeek, detalhes: 'Definir budget, criar criativos e segmentar público-alvo.', id: 3 },
-                    { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', dataRegistro: today, dataPrevisao: today, detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
+                    // Exemplo SEM data de previsão
+                    { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', dataRegistro: today, dataPrevisao: '', detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
                 ];
             }
         }
