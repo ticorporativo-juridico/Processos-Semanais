@@ -143,9 +143,9 @@
                 </select>
             </div>
             
-            <!-- Campo Data de Registro (Pré-preenchido para hoje) -->
+            <!-- Campo Data de Registro (Pré-preenchido para hoje - Carimbo do Tempo) -->
             <div class="col-span-1">
-                <label for="data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro</label>
+                <label for="data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro (Inclusão)</label>
                 <input type="date" id="data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
             </div>
 
@@ -215,7 +215,7 @@
                     <!-- Datas -->
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label for="edit-data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro</label>
+                            <label for="edit-data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro (Inclusão)</label>
                             <input type="date" id="edit-data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500 shadow-sm">
                         </div>
                         <div>
@@ -252,6 +252,7 @@
 
         // Função auxiliar para obter a data de hoje formatada (YYYY-MM-DD)
         function getTodayDateString() {
+            // Garante que a data seja sempre o dia atual na timezone correta (útil para pré-preenchimento)
             return new Date().toISOString().split('T')[0];
         }
 
@@ -271,12 +272,10 @@
                 const storedProcesses = localStorage.getItem('processosDashboard');
                 if (storedProcesses) {
                     const loaded = JSON.parse(storedProcesses);
-                    // Atualiza a estrutura de dados de itens antigos para incluir dataRegistro/dataPrevisao
+                    // Garante que todos os processos tenham dataRegistro e dataPrevisao (mesmo que vazias)
                     processos = loaded.map(p => ({
-                        // Se for um processo antigo (só tinha 'data'), usa 'data' para ambos.
-                        // Garante que todos os processos tenham dataRegistro e dataPrevisao (mesmo que vazias)
                         dataRegistro: p.dataRegistro || p.data || getTodayDateString(), 
-                        dataPrevisao: p.dataPrevisao || p.data || '', // Garante string vazia se não definida
+                        dataPrevisao: p.dataPrevisao || p.data || '', 
                         ...p,
                     }));
                 }
@@ -295,7 +294,7 @@
                 document.getElementById('edit-colaborador')
             ];
 
-            // Define o valor padrão para a Data de Registro como a data atual
+            // Define o valor padrão para a Data de Registro como a data atual (o carimbo do tempo)
             document.getElementById('data-registro').value = getTodayDateString();
 
             colaboradores.forEach(nome => {
@@ -322,8 +321,8 @@
             let previsaoDisplay = 'Indefinida';
             if (processo.dataPrevisao) {
                 // Tenta formatar a data, se for válida
-                const dateObj = new Date(processo.dataPrevisao);
-                if (!isNaN(dateObj)) {
+                const dateObj = new Date(processo.dataPrevisao.replace(/-/g, '/')); // Ajuste para compatibilidade de data
+                if (!isNaN(dateObj) && dateObj.getFullYear() > 1900) {
                     previsaoDisplay = dateObj.toLocaleDateString('pt-BR');
                 } else {
                     previsaoDisplay = 'Data Inválida';
@@ -353,14 +352,14 @@
                     <div class="text-xs text-gray-500">Colab: <span class="font-bold text-gray-700">${processo.colaborador}</span></div>
                     <span class="card-date text-xs" title="Previsão de Conclusão">Prev.: ${previsaoDisplay}</span>
                 </div>
-                <div class="text-xs text-gray-400 mt-1">Registro: ${new Date(processo.dataRegistro).toLocaleDateString('pt-BR')}</div>
+                <div class="text-xs text-gray-400 mt-1">Registro: ${new Date(processo.dataRegistro.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</div>
                 <div class="text-gray-600 whitespace-pre-wrap mt-3 pt-3 border-t border-gray-100">${processo.detalhes}</div>
             `;
             return card;
         }
 
         function renderDashboard() {
-            // Limpa as colunas e recria os títulos com os ícones atualizados (com novas cores neutras)
+            // Limpa as colunas e recria os títulos
             document.getElementById('column-tratamento').innerHTML = '<h3 class="text-xl font-extrabold text-amber-700 border-b-4 border-amber-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
             document.getElementById('column-tratados').innerHTML = '<h3 class="text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
             document.getElementById('column-proximos').innerHTML = '<h3 class="text-xl font-extrabold text-sky-600 border-b-4 border-sky-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
@@ -405,7 +404,7 @@
             document.getElementById('edit-status').value = processo.status;
             document.getElementById('edit-data-registro').value = processo.dataRegistro;
             
-            // Define o valor do campo de data de previsão, pode ser vazio
+            // Define o valor do campo de data de previsão, pode ser vazio (opcional)
             document.getElementById('edit-data-previsao').value = processo.dataPrevisao || ''; 
             
             document.getElementById('edit-detalhes').value = processo.detalhes;
@@ -429,7 +428,7 @@
                 return;
             }
 
-            // Obtém o valor da data de previsão. Se estiver vazia, salva como string vazia.
+            // Data de Previsão é opcional
             const dataPrevisao = document.getElementById('edit-data-previsao').value.trim();
 
             // Atualiza o objeto processo
@@ -507,12 +506,14 @@
             
             // Obtém a data de previsão. Se não for preenchida, salva como string vazia.
             const dataPrevisaoValue = document.getElementById('data-previsao').value.trim();
+            // Data de Registro é preenchida pelo valor atual do campo (que é o padrão de hoje)
+            const dataRegistroValue = document.getElementById('data-registro').value;
 
             const novoProcesso = {
                 colaborador: document.getElementById('colaborador').value,
                 status: document.getElementById('processo-status').value,
                 nome: document.getElementById('processo-nome').value,
-                dataRegistro: document.getElementById('data-registro').value,
+                dataRegistro: dataRegistroValue,
                 dataPrevisao: dataPrevisaoValue, // Salva o valor (pode ser string vazia)
                 detalhes: document.getElementById('detalhes').value || 'Nenhum detalhe fornecido.',
                 id: Date.now() // ID único
@@ -522,11 +523,13 @@
             saveProcesses();
             renderDashboard();
             
-            // Limpa campos específicos do formulário e redefine a data de registro
+            // Limpa campos específicos do formulário
             document.getElementById('processo-nome').value = '';
             document.getElementById('data-previsao').value = ''; // Limpa previsão
             document.getElementById('detalhes').value = '';
-            document.getElementById('data-registro').value = getTodayDateString(); // Volta para hoje
+            
+            // ⭐️ IMPORTANTE: Redefine a Data de Registro para o dia atual para a próxima inclusão
+            document.getElementById('data-registro').value = getTodayDateString(); 
             
             console.log(`Processo "${novoProcesso.nome}" adicionado para ${novoProcesso.colaborador}!`);
         });
@@ -538,7 +541,8 @@
             if (processos.length === 0) {
                 // Ajustando as datas de exemplo
                 const today = getTodayDateString();
-                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                // Subtrai 24 horas para garantir que seja o dia anterior
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]; 
                 const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
                 processos = [
