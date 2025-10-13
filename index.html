@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Semanal de Processos</title>
+    <!-- Carrega o Tailwind CSS para um layout moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Configuração de Fonte Padrão e Estilos Globais */
+        :root {
+            --color-primary: #4f46e5; /* Indigo */
+            --color-secondary: #6366f1; /* Indigo Light */
+            --color-bg: #f8fafc; /* Super Light Gray */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg);
+        }
+        /* Estilos customizados para as colunas do Kanban */
+        .board-column {
+            min-width: 300px;
+            max-width: 350px;
+            flex-shrink: 0;
+            /* Estilo da coluna para profundidade */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        .task-card {
+            transition: transform 0.2s, box-shadow 0.3s;
+            border-left-width: 6px; /* Borda mais grossa */
+            border-radius: 0.75rem; /* Cantos mais arredondados */
+        }
+        .task-card:hover {
+            transform: translateY(-3px); /* Efeito 3D sutil */
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1), 0 5px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        /* Cores de status mais vibrantes */
+        .status-tratamento { border-left-color: #f97316; /* Laranja Vívido - Em Andamento */ }
+        .status-tratados { border-left-color: #16a34a; /* Verde Forte - Concluído */ }
+        .status-proximos { border-left-color: #3b82f6; /* Azul Claro - Planejamento */ }
+
+        /* Estilo para a data no card */
+        .card-date {
+            background-color: #eff6ff; /* Azul claro de fundo */
+            color: #1e40af; /* Azul escuro do texto */
+            padding: 2px 8px;
+            border-radius: 9999px; /* Pill shape */
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <!-- Cabeçalho Principal Moderno com Gradient -->
+    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-xl shadow-xl p-8 mb-8 text-center">
+        <h1 class="text-4xl font-black text-white">Dashboard de Acompanhamento Semanal</h1>
+        <p class="text-indigo-200 mt-2 text-lg">Visão dinâmica dos processos da equipe.</p>
+    </header>
+
+    <!-- Seção de Filtros com Layout Mais Elegante -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 flex flex-wrap gap-4 items-end border-t-4 border-indigo-400">
+        <h2 class="text-xl font-bold text-indigo-700 w-full md:w-auto">Filtros Avançados:</h2>
+
+        <!-- Filtro por Colaborador -->
+        <div class="flex flex-col w-full sm:w-auto flex-1 min-w-[200px]">
+            <label for="filter-colaborador" class="text-sm font-medium text-gray-600 mb-1">Filtrar por Colaborador</label>
+            <select id="filter-colaborador" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 shadow-inner">
+                <option value="todos" class="font-bold">Todos os Colaboradores</option>
+                <!-- Opções preenchidas pelo JS -->
+            </select>
+        </div>
+
+        <!-- Filtro por Data (Calendário) -->
+        <div class="flex flex-col w-full sm:w-auto flex-1 min-w-[200px]">
+            <label for="filter-date" class="text-sm font-medium text-gray-600 mb-1">Filtrar por Data (Registro/Previsão)</label>
+            <input type="date" id="filter-date" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 shadow-inner">
+        </div>
+
+        <!-- Botão Limpar Filtros -->
+        <button onclick="clearFilters()" class="bg-gray-700 text-white hover:bg-gray-800 px-4 py-2 rounded-xl font-semibold transition duration-200 shadow-md min-h-[44px] w-full sm:w-auto">
+            Limpar Filtros
+        </button>
+    </div>
+
+    <!-- Dashboard Kanban com melhor visualização -->
+    <div class="flex space-x-6 overflow-x-auto pb-6">
+        
+        <!-- Coluna 1: Em Tratamento -->
+        <div id="column-tratamento" class="board-column bg-white p-5 rounded-2xl shadow-xl">
+            <h3 class="text-xl font-extrabold text-orange-600 border-b-4 border-orange-300 pb-3 mb-4 flex items-center">
+                <span class="mr-2 text-2xl">🔥</span> Em Tratamento
+            </h3>
+            <!-- Cards inseridos aqui pelo JS -->
+        </div>
+
+        <!-- Coluna 2: Tratados na Semana -->
+        <div id="column-tratados" class="board-column bg-white p-5 rounded-2xl shadow-xl">
+            <h3 class="text-xl font-extrabold text-green-600 border-b-4 border-green-300 pb-3 mb-4 flex items-center">
+                <span class="mr-2 text-2xl">✨</span> Tratados na Semana
+            </h3>
+            <!-- Cards inseridos aqui pelo JS -->
+        </div>
+
+        <!-- Coluna 3: Próximos Processos -->
+        <div id="column-proximos" class="board-column bg-white p-5 rounded-2xl shadow-xl">
+            <h3 class="text-xl font-extrabold text-blue-600 border-b-4 border-blue-300 pb-3 mb-4 flex items-center">
+                <span class="mr-2 text-2xl">🚀</span> Próximos Processos
+            </h3>
+            <!-- Cards inseridos aqui pelo JS -->
+        </div>
+        
+    </div>
+
+    <!-- Formulário de Entrada de Dados com estilo aprimorado -->
+    <div class="bg-white rounded-xl shadow-2xl p-6 mt-8 border-l-8 border-indigo-500">
+        <h2 class="text-2xl font-black text-gray-800 mb-6 border-b pb-2">✍️ Registrar Novo Processo</h2>
+        <form id="process-form" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Campo Colaborador -->
+            <div class="col-span-1">
+                <label for="colaborador" class="block text-sm font-semibold text-gray-700">Colaborador</label>
+                <select id="colaborador" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
+                    <!-- Opções preenchidas pelo JS -->
+                </select>
+            </div>
+
+            <!-- Campo Status -->
+            <div class="col-span-1">
+                <label for="processo-status" class="block text-sm font-semibold text-gray-700">Status do Processo</label>
+                <select id="processo-status" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
+                    <option value="tratamento">Em Tratamento</option>
+                    <option value="tratados">Tratados na Semana</option>
+                    <option value="proximos">Próximos Processos</option>
+                </select>
+            </div>
+
+            <!-- Campo Data -->
+            <div class="col-span-1">
+                <label for="data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro/Previsão</label>
+                <input type="date" id="data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
+            </div>
+            
+            <!-- Campo Nome do Processo -->
+            <div class="col-span-1 md:col-span-3">
+                <label for="processo-nome" class="block text-sm font-semibold text-gray-700">Nome do Processo/Tarefa</label>
+                <input type="text" id="processo-nome" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: Fechamento mensal Cliente Alpha">
+            </div>
+
+            <!-- Campo Detalhes -->
+            <div class="col-span-1 md:col-span-3">
+                <label for="detalhes" class="block text-sm font-semibold text-gray-700">Detalhes/Descrição</label>
+                <textarea id="detalhes" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 h-24" placeholder="O que está sendo feito ou o que foi/será feito..."></textarea>
+            </div>
+            
+            <!-- Botão Adicionar -->
+            <div class="col-span-1 md:col-span-3 text-right">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition duration-200 transform hover:scale-[1.02]">
+                    Adicionar Processo
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        // Lista de colaboradores em ordem alfabética
+        const colaboradores = [
+            'Beatriz', 'Diego', 'Emily', 'Felipe', 'Hosana', 
+            'João', 'Mariane', 'Rebeca', 'Tairane', 'Thais'
+        ];
+
+        let processos = [];
+
+        // ------------------ Funções de Persistência (localStorage) ------------------
+
+        function saveProcesses() {
+            try {
+                localStorage.setItem('processosDashboard', JSON.stringify(processos));
+            } catch (e) {
+                console.error("Erro ao salvar dados no localStorage:", e);
+                console.error("ERRO: Não foi possível salvar os dados. Verifique as configurações do seu navegador."); 
+            }
+        }
+
+        function loadProcesses() {
+            try {
+                const storedProcesses = localStorage.getItem('processosDashboard');
+                if (storedProcesses) {
+                    processos = JSON.parse(storedProcesses);
+                }
+            } catch (e) {
+                console.error("Erro ao carregar dados do localStorage:", e);
+                processos = []; // Limpa dados em caso de erro de parsing
+            }
+        }
+        
+        // ------------------ Funções de UI ------------------
+
+        function setupCollaboratorSelects() {
+            const selects = [
+                document.getElementById('filter-colaborador'),
+                document.getElementById('colaborador')
+            ];
+
+            colaboradores.forEach(nome => {
+                const option = document.createElement('option');
+                option.value = nome;
+                option.textContent = nome;
+
+                // Adiciona a opção de filtro (além do "Todos")
+                selects[0].appendChild(option.cloneNode(true)); 
+                // Adiciona a opção no formulário de cadastro
+                selects[1].appendChild(option); 
+            });
+        }
+
+        function createCard(processo) {
+            const card = document.createElement('div');
+            // Classes Tailwind para visual
+            card.className = `task-card bg-white p-4 rounded-xl shadow-lg mb-4 text-sm status-${processo.status}`;
+            
+            // Atributos para facilitar a filtragem
+            card.setAttribute('data-colaborador', processo.colaborador);
+            card.setAttribute('data-data', processo.data);
+            card.setAttribute('data-status', processo.status);
+
+            // Formatação da data para BR
+            const dataFormatada = new Date(processo.data).toLocaleDateString('pt-BR');
+
+            card.innerHTML = `
+                <div class="font-extrabold text-gray-800 text-base mb-2">${processo.nome}</div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="text-xs text-gray-500">Colab: <span class="font-bold text-gray-700">${processo.colaborador}</span></div>
+                    <span class="card-date text-xs">${dataFormatada}</span>
+                </div>
+                <div class="text-gray-600 whitespace-pre-wrap mt-3 pt-3 border-t border-gray-100">${processo.detalhes}</div>
+            `;
+            return card;
+        }
+
+        function renderDashboard() {
+            // Limpa as colunas e recria os títulos com os ícones atualizados
+            document.getElementById('column-tratamento').innerHTML = '<h3 class="text-xl font-extrabold text-orange-600 border-b-4 border-orange-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
+            document.getElementById('column-tratados').innerHTML = '<h3 class="text-xl font-extrabold text-green-600 border-b-4 border-green-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
+            document.getElementById('column-proximos').innerHTML = '<h3 class="text-xl font-extrabold text-blue-600 border-b-4 border-blue-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
+
+            // Renderiza os cards nas colunas corretas
+            processos.forEach(processo => {
+                const card = createCard(processo);
+                let targetColumn;
+                
+                switch (processo.status) {
+                    case 'tratamento':
+                        targetColumn = document.getElementById('column-tratamento');
+                        break;
+                    case 'tratados':
+                        targetColumn = document.getElementById('column-tratados');
+                        break;
+                    case 'proximos':
+                        targetColumn = document.getElementById('column-proximos');
+                        break;
+                }
+                
+                if (targetColumn) {
+                    targetColumn.appendChild(card);
+                }
+            });
+            filterCards(); // Aplica os filtros atuais após a renderização
+        }
+
+        // ------------------ Funções de Filtro ------------------
+        
+        function filterCards() {
+            const filterColab = document.getElementById('filter-colaborador').value;
+            const filterDate = document.getElementById('filter-date').value;
+            const allCards = document.querySelectorAll('.task-card');
+
+            allCards.forEach(card => {
+                const cardColab = card.getAttribute('data-colaborador');
+                const cardDate = card.getAttribute('data-data');
+                let matches = true;
+
+                // 1. Filtro por Colaborador
+                if (filterColab !== 'todos' && cardColab !== filterColab) {
+                    matches = false;
+                }
+
+                // 2. Filtro por Data (se a data do filtro for definida, deve corresponder à data do card)
+                if (filterDate && cardDate !== filterDate) {
+                    matches = false;
+                }
+
+                card.style.display = matches ? 'block' : 'none';
+            });
+        }
+        
+        function clearFilters() {
+            document.getElementById('filter-colaborador').value = 'todos';
+            document.getElementById('filter-date').value = '';
+            filterCards();
+        }
+
+        // ------------------ Manipulação do Formulário ------------------
+
+        document.getElementById('process-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const novoProcesso = {
+                colaborador: document.getElementById('colaborador').value,
+                status: document.getElementById('processo-status').value,
+                nome: document.getElementById('processo-nome').value,
+                data: document.getElementById('data-registro').value,
+                detalhes: document.getElementById('detalhes').value || 'Nenhum detalhe fornecido.',
+                id: Date.now() // ID único
+            };
+
+            processos.push(novoProcesso);
+            saveProcesses();
+            renderDashboard();
+            
+            // Limpa campos específicos do formulário
+            document.getElementById('processo-nome').value = '';
+            document.getElementById('data-registro').value = '';
+            document.getElementById('detalhes').value = '';
+            
+            console.log(`Processo "${novoProcesso.nome}" adicionado para ${novoProcesso.colaborador}!`);
+        });
+
+        // ------------------ Inicialização ------------------
+        
+        // Define alguns dados iniciais se não houver nada salvo no localStorage
+        function setInitialData() {
+            if (processos.length === 0) {
+                // Ajustando as datas de exemplo para que o filtro de calendário funcione bem
+                const today = new Date().toISOString().split('T')[0];
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+
+                processos = [
+                    { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos', data: today, detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta.', id: 1 },
+                    { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', data: yesterday, detalhes: 'Migração para novo ambiente AWS concluída com sucesso.', id: 2 },
+                    { colaborador: 'Emily', status: 'proximos', nome: 'Planejamento de Campanha Q4', data: nextWeek, detalhes: 'Definir budget, criar criativos e segmentar público-alvo.', id: 3 },
+                    { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', data: today, detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
+                ];
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCollaboratorSelects(); // Popula os <select>
+            loadProcesses(); // Carrega dados salvos
+            setInitialData(); // Adiciona dados de exemplo se não houver dados salvos
+            renderDashboard(); // Renderiza a tela
+        });
+
+    </script>
+</body>
+</html>
