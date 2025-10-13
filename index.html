@@ -9,8 +9,9 @@
     <style>
         /* Configuração de Fonte Padrão e Estilos Globais */
         :root {
-            --color-primary: #4f46e5; /* Indigo */
-            --color-secondary: #6366f1; /* Indigo Light */
+            /* Cor primária agora é um Cinza Chumbo (Slate) */
+            --color-primary: #475569; 
+            --color-secondary: #64748b; 
             --color-bg: #f8fafc; /* Super Light Gray */
         }
         body {
@@ -34,15 +35,19 @@
             transform: translateY(-3px); /* Efeito 3D sutil */
             box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1), 0 5px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        /* Cores de status mais vibrantes */
-        .status-tratamento { border-left-color: #f97316; /* Laranja Vívido - Em Andamento */ }
-        .status-tratados { border-left-color: #16a34a; /* Verde Forte - Concluído */ }
-        .status-proximos { border-left-color: #3b82f6; /* Azul Claro - Planejamento */ }
+        
+        /* Cores de status em tons neutros e discretos */
+        /* Tratamento (Muted Amber/Gold) */
+        .status-tratamento { border-left-color: #d97706; } 
+        /* Tratados (Muted Sage/Teal) */
+        .status-tratados { border-left-color: #059669; } 
+        /* Próximos (Soft Sky Blue/Slate) */
+        .status-proximos { border-left-color: #0ea5e9; } 
 
         /* Estilo para a data no card */
         .card-date {
-            background-color: #eff6ff; /* Azul claro de fundo */
-            color: #1e40af; /* Azul escuro do texto */
+            background-color: #f0f4f8; /* Cinza super claro */
+            color: #475569; /* Cinza Chumbo */
             padding: 2px 8px;
             border-radius: 9999px; /* Pill shape */
             font-weight: 600;
@@ -51,20 +56,20 @@
 </head>
 <body class="p-4 sm:p-8">
 
-    <!-- Cabeçalho Principal Moderno com Gradient -->
-    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-xl shadow-xl p-8 mb-8 text-center">
+    <!-- Cabeçalho Principal Moderno com Gradient Neutro (Cinzas) -->
+    <header class="bg-gradient-to-r from-slate-700 to-gray-500 rounded-xl shadow-xl p-8 mb-8 text-center">
         <h1 class="text-4xl font-black text-white">Dashboard de Acompanhamento Semanal</h1>
-        <p class="text-indigo-200 mt-2 text-lg">Visão dinâmica dos processos da equipe.</p>
+        <p class="text-slate-200 mt-2 text-lg">Visão dinâmica dos processos da equipe.</p>
     </header>
 
     <!-- Seção de Filtros com Layout Mais Elegante -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 flex flex-wrap gap-4 items-end border-t-4 border-indigo-400">
-        <h2 class="text-xl font-bold text-indigo-700 w-full md:w-auto">Filtros Avançados:</h2>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 flex flex-wrap gap-4 items-end border-t-4 border-slate-400">
+        <h2 class="text-xl font-bold text-slate-700 w-full md:w-auto">Filtros Avançados:</h2>
 
         <!-- Filtro por Colaborador -->
         <div class="flex flex-col w-full sm:w-auto flex-1 min-w-[200px]">
             <label for="filter-colaborador" class="text-sm font-medium text-gray-600 mb-1">Filtrar por Colaborador</label>
-            <select id="filter-colaborador" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 shadow-inner">
+            <select id="filter-colaborador" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-slate-500 focus:border-slate-500 transition duration-200 shadow-inner">
                 <option value="todos" class="font-bold">Todos os Colaboradores</option>
                 <!-- Opções preenchidas pelo JS -->
             </select>
@@ -73,7 +78,7 @@
         <!-- Filtro por Data (Calendário) -->
         <div class="flex flex-col w-full sm:w-auto flex-1 min-w-[200px]">
             <label for="filter-date" class="text-sm font-medium text-gray-600 mb-1">Filtrar por Data (Registro/Previsão)</label>
-            <input type="date" id="filter-date" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 shadow-inner">
+            <input type="date" id="filter-date" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-slate-500 focus:border-slate-500 transition duration-200 shadow-inner">
         </div>
 
         <!-- Botão Limpar Filtros -->
@@ -85,25 +90,25 @@
     <!-- Dashboard Kanban com melhor visualização -->
     <div class="flex space-x-6 overflow-x-auto pb-6">
         
-        <!-- Coluna 1: Em Tratamento -->
+        <!-- Coluna 1: Em Tratamento (Muted Amber) -->
         <div id="column-tratamento" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <h3 class="text-xl font-extrabold text-orange-600 border-b-4 border-orange-300 pb-3 mb-4 flex items-center">
+            <h3 class="text-xl font-extrabold text-amber-700 border-b-4 border-amber-300 pb-3 mb-4 flex items-center">
                 <span class="mr-2 text-2xl">🔥</span> Em Tratamento
             </h3>
             <!-- Cards inseridos aqui pelo JS -->
         </div>
 
-        <!-- Coluna 2: Tratados na Semana -->
+        <!-- Coluna 2: Tratados na Semana (Muted Emerald) -->
         <div id="column-tratados" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <h3 class="text-xl font-extrabold text-green-600 border-b-4 border-green-300 pb-3 mb-4 flex items-center">
+            <h3 class="text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 pb-3 mb-4 flex items-center">
                 <span class="mr-2 text-2xl">✨</span> Tratados na Semana
             </h3>
             <!-- Cards inseridos aqui pelo JS -->
         </div>
 
-        <!-- Coluna 3: Próximos Processos -->
+        <!-- Coluna 3: Próximos Processos (Soft Sky Blue) -->
         <div id="column-proximos" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <h3 class="text-xl font-extrabold text-blue-600 border-b-4 border-blue-300 pb-3 mb-4 flex items-center">
+            <h3 class="text-xl font-extrabold text-sky-600 border-b-4 border-sky-300 pb-3 mb-4 flex items-center">
                 <span class="mr-2 text-2xl">🚀</span> Próximos Processos
             </h3>
             <!-- Cards inseridos aqui pelo JS -->
@@ -112,14 +117,14 @@
     </div>
 
     <!-- Formulário de Entrada de Dados com estilo aprimorado -->
-    <div class="bg-white rounded-xl shadow-2xl p-6 mt-8 border-l-8 border-indigo-500">
+    <div class="bg-white rounded-xl shadow-2xl p-6 mt-8 border-l-8 border-slate-500">
         <h2 class="text-2xl font-black text-gray-800 mb-6 border-b pb-2">✍️ Registrar Novo Processo</h2>
         <form id="process-form" class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <!-- Campo Colaborador -->
             <div class="col-span-1">
                 <label for="colaborador" class="block text-sm font-semibold text-gray-700">Colaborador</label>
-                <select id="colaborador" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
+                <select id="colaborador" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
                     <!-- Opções preenchidas pelo JS -->
                 </select>
             </div>
@@ -127,7 +132,7 @@
             <!-- Campo Status -->
             <div class="col-span-1">
                 <label for="processo-status" class="block text-sm font-semibold text-gray-700">Status do Processo</label>
-                <select id="processo-status" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
+                <select id="processo-status" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
                     <option value="tratamento">Em Tratamento</option>
                     <option value="tratados">Tratados na Semana</option>
                     <option value="proximos">Próximos Processos</option>
@@ -137,24 +142,24 @@
             <!-- Campo Data -->
             <div class="col-span-1">
                 <label for="data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro/Previsão</label>
-                <input type="date" id="data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
+                <input type="date" id="data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 transition duration-150 bg-gray-50">
             </div>
             
             <!-- Campo Nome do Processo -->
             <div class="col-span-1 md:col-span-3">
                 <label for="processo-nome" class="block text-sm font-semibold text-gray-700">Nome do Processo/Tarefa</label>
-                <input type="text" id="processo-nome" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: Fechamento mensal Cliente Alpha">
+                <input type="text" id="processo-nome" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500" placeholder="Ex: Fechamento mensal Cliente Alpha">
             </div>
 
             <!-- Campo Detalhes -->
             <div class="col-span-1 md:col-span-3">
                 <label for="detalhes" class="block text-sm font-semibold text-gray-700">Detalhes/Descrição</label>
-                <textarea id="detalhes" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 h-24" placeholder="O que está sendo feito ou o que foi/será feito..."></textarea>
+                <textarea id="detalhes" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-slate-500 focus:border-slate-500 h-24" placeholder="O que está sendo feito ou o que foi/será feito..."></textarea>
             </div>
             
-            <!-- Botão Adicionar -->
+            <!-- Botão Adicionar (Cor primária Slate) -->
             <div class="col-span-1 md:col-span-3 text-right">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition duration-200 transform hover:scale-[1.02]">
+                <button type="submit" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition duration-200 transform hover:scale-[1.02]">
                     Adicionar Processo
                 </button>
             </div>
@@ -248,10 +253,10 @@
         }
 
         function renderDashboard() {
-            // Limpa as colunas e recria os títulos com os ícones atualizados
-            document.getElementById('column-tratamento').innerHTML = '<h3 class="text-xl font-extrabold text-orange-600 border-b-4 border-orange-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
-            document.getElementById('column-tratados').innerHTML = '<h3 class="text-xl font-extrabold text-green-600 border-b-4 border-green-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
-            document.getElementById('column-proximos').innerHTML = '<h3 class="text-xl font-extrabold text-blue-600 border-b-4 border-blue-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
+            // Limpa as colunas e recria os títulos com os ícones atualizados (com novas cores neutras)
+            document.getElementById('column-tratamento').innerHTML = '<h3 class="text-xl font-extrabold text-amber-700 border-b-4 border-amber-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
+            document.getElementById('column-tratados').innerHTML = '<h3 class="text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
+            document.getElementById('column-proximos').innerHTML = '<h3 class="text-xl font-extrabold text-sky-600 border-b-4 border-sky-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
 
             // Renderiza os cards nas colunas corretas
             processos.forEach(processo => {
