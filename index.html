@@ -80,11 +80,11 @@
         /* Cores de status - PALETA CORPORATIVA/TECNOLÓGICA */
         /* Tratamento (Strong Orange - Atenção/Urgência) */
         .status-tratamento { border-left-color: #ea580c; } 
-        /* Tratados (Emerald Green - Sucesso/Conclusão) */
+        /* Tratados (Emerald Green - Sucesso/Conclusão - USADO PARA CONCLUÍDOS NA SEMANA) */
         .status-tratados { border-left-color: #10b981; } 
         /* Próximos (Indigo - Planejamento/Futuro) */
         .status-proximos { border-left-color: #6366f1; } 
-        /* Concluídos (Gray/Slate - Histórico/Arquivado) */
+        /* Concluídos (Gray/Slate - Histórico/Arquivado - USADO PARA CONCLUÍDOS ANTIGOS) */
         .status-concluido-hist { border-left-color: #6b7280; } 
 
         /* Estilo para a data no card */
@@ -161,7 +161,7 @@
             <!-- Cards inseridos aqui pelo JS -->
         </div>
 
-        <!-- Coluna 2: Tratados na Semana -->
+        <!-- Coluna 2: Tratados na Semana (Apresenta os Concluídos nesta semana) -->
         <div id="column-tratados" class="board-column bg-white p-5 rounded-2xl shadow-xl">
             <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
             <h3 class="kanban-header-sticky text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 flex items-center">
@@ -179,7 +179,7 @@
             <!-- Cards inseridos aqui pelo JS -->
         </div>
         
-        <!-- Coluna 4: Histórico de Concluídos (Novo Dashboard) -->
+        <!-- Coluna 4: Histórico de Concluídos (Concluídos antes desta semana) -->
         <div id="column-concluidos-historico" class="board-column bg-white p-5 rounded-2xl shadow-xl">
             <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
             <h3 class="kanban-header-sticky text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 flex items-center">
@@ -203,13 +203,14 @@
                 </select>
             </div>
 
-            <!-- Campo Status -->
+            <!-- Campo Status (IMPORTANTE: Status 'tratados' agora é apenas um rótulo) -->
             <div class="col-span-full md:col-span-1">
                 <label for="processo-status" class="block text-sm font-semibold text-gray-700">Status do Processo</label>
                 <select id="processo-status" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
                     <option value="tratamento">Em Tratamento</option>
-                    <option value="tratados">Tratados na Semana</option>
                     <option value="proximos">Próximos Processos</option>
+                    <!-- Mantido o valor 'tratados' para fins de estilo/edição, mas a coluna será decidida pela data de conclusão -->
+                    <option value="tratados">Status: Tratados (Selecione Conclusão abaixo)</option>
                 </select>
             </div>
             
@@ -225,7 +226,7 @@
                 <input type="date" id="data-previsao" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
             </div>
             
-            <!-- Campo Data de Conclusão (NOVO CAMPO, em destaque) -->
+            <!-- Campo Data de Conclusão (Chave para o novo roteamento) -->
             <div class="col-span-full md:col-span-2">
                 <label for="data-conclusao" class="block text-sm font-extrabold text-emerald-700">⭐ Data de Conclusão (Opcional, se JÁ feito)</label>
                 <input type="date" id="data-conclusao" class="mt-1 block w-full p-3 border-2 border-emerald-300 rounded-lg shadow-md focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 bg-emerald-50">
@@ -282,8 +283,8 @@
                             <label for="edit-status" class="block text-sm font-semibold text-gray-700">Status</label>
                             <select id="edit-status" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
                                 <option value="tratamento">Em Tratamento</option>
-                                <option value="tratados">Tratados na Semana</option>
                                 <option value="proximos">Próximos Processos</option>
+                                <option value="tratados">Status: Tratados</option>
                             </select>
                         </div>
                     </div>
@@ -335,6 +336,38 @@
         // Função auxiliar para obter a data de hoje formatada (YYYY-MM-DD)
         function getTodayDateString() {
             return new Date().toISOString().split('T')[0];
+        }
+
+        /**
+         * Verifica se uma data (YYYY-MM-DD) cai na semana de calendário atual (Dom-Sáb).
+         * @param {string} dateString Data no formato YYYY-MM-DD.
+         * @returns {boolean} True se a data estiver na semana atual.
+         */
+        function isWithinCurrentWeek(dateString) {
+            if (!dateString) return false;
+            
+            // Parse a data como UTC para evitar problemas de fuso horário
+            const targetDate = new Date(dateString + 'T00:00:00');
+            
+            // Cria um objeto Date para hoje, normalizado para meia-noite
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+
+            const oneDay = 1000 * 60 * 60 * 24;
+            
+            // Calcula o dia da semana atual (0=Dom, 6=Sáb)
+            const dayOfWeek = today.getDay(); 
+            
+            // Calcula o início da semana (último Domingo)
+            const startOfWeek = new Date(today.getTime() - dayOfWeek * oneDay); 
+            // Calcula o fim da semana (próximo Sábado)
+            const endOfWeek = new Date(startOfWeek.getTime() + 6 * oneDay);    
+
+            // Adiciona 23:59:59.999 ao fim da semana para garantir que o sábado completo seja incluído
+            endOfWeek.setHours(23, 59, 59, 999);
+
+            // Verifica se a data alvo está entre o início e o fim da semana atual
+            return targetDate >= startOfWeek && targetDate <= endOfWeek;
         }
 
         // ------------------ Funções de Persistência (localStorage) ------------------
@@ -401,9 +434,10 @@
         }
 
         function createCard(processo) {
-            // Se o processo tem data de conclusão, ele usa um estilo diferente (Histórico)
-            const isConcluidoHistorico = !!processo.dataConclusao;
-            const statusClass = isConcluidoHistorico ? 'concluido-hist' : processo.status;
+            // Se o processo tem data de conclusão, verifica se é histórico (antigo) ou da semana (recente)
+            let statusClass;
+            // A classe é usada apenas para a cor da borda esquerda
+            statusClass = isWithinCurrentWeek(processo.dataConclusao) ? 'tratados' : (processo.dataConclusao ? 'concluido-hist' : (processo.status === 'proximos' ? 'proximos' : 'tratamento'));
 
             const card = document.createElement('div');
             card.className = `task-card bg-white p-4 rounded-xl shadow-lg mb-4 text-sm status-${statusClass}`;
@@ -414,12 +448,14 @@
 
             const previsaoDisplay = formatDate(processo.dataPrevisao) || 'Indefinida';
             const registroDisplay = formatDate(processo.dataRegistro) || 'Indefinida';
-            const conclusaoDisplay = formatDate(processo.dataConclusao); // Novo campo
+            const conclusaoDisplay = formatDate(processo.dataConclusao); 
             
             // Renderiza o campo de conclusão se estiver presente
             let conclusaoHtml = '';
             if (conclusaoDisplay) {
-                conclusaoHtml = `<span class="card-done text-xs" title="Data de Conclusão">Concluído em: ${conclusaoDisplay}</span>`;
+                // O texto aqui é dinâmico para destacar que é Concluído na Semana ou Concluído no Histórico
+                const conclusaoText = isWithinCurrentWeek(processo.dataConclusao) ? 'Concluído Esta Semana' : 'Concluído em Histórico';
+                conclusaoHtml = `<span class="card-done text-xs" title="${conclusaoText}">✅ ${conclusaoDisplay}</span>`;
             }
 
             card.innerHTML = `
@@ -456,41 +492,64 @@
         }
 
         function renderDashboard() {
-            // Limpa as colunas e recria os títulos
-            // IMPORTANTE: Manter a classe .kanban-header-sticky
+            // 1. Inicializa arrays para as colunas
+            const tratamento = [];
+            const tratadosSemana = [];
+            const proximos = [];
+            const historico = [];
+
+            // 2. Classifica os processos nas listas
+            processos.forEach(processo => {
+                const isConcluido = !!processo.dataConclusao;
+
+                if (isConcluido) {
+                    if (isWithinCurrentWeek(processo.dataConclusao)) {
+                        tratadosSemana.push(processo);
+                    } else {
+                        historico.push(processo);
+                    }
+                } else {
+                    switch (processo.status) {
+                        case 'proximos':
+                            proximos.push(processo);
+                            break;
+                        case 'tratamento':
+                        case 'tratados': // Qualquer outro status não concluído vai para tratamento
+                        default:
+                            tratamento.push(processo);
+                            break;
+                    }
+                }
+            });
+            
+            // 3. ORDENAÇÃO: Ordena o Histórico de Concluídos por Data de Conclusão (Mais Recente Primeiro)
+            historico.sort((a, b) => {
+                // Compara as strings YYYY-MM-DD em ordem decrescente (b antes de a)
+                if (!a.dataConclusao) return 1; // Itens sem dataConclusao vão para o final
+                if (!b.dataConclusao) return -1; // Itens sem dataConclusao vão para o final
+                return b.dataConclusao.localeCompare(a.dataConclusao);
+            });
+            
+            // 4. Limpa e recria os títulos das colunas
             document.getElementById('column-tratamento').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
             document.getElementById('column-tratados').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
             document.getElementById('column-proximos').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
             document.getElementById('column-concluidos-historico').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 flex items-center"><span class="mr-2 text-2xl">✅</span> Histórico de Concluídos</h3>';
 
+            // 5. Renderiza os cards das listas ORDENADAS
+            
+            // Coluna Tratamento
+            tratamento.forEach(processo => document.getElementById('column-tratamento').appendChild(createCard(processo)));
+            
+            // Coluna Tratados na Semana
+            tratadosSemana.forEach(processo => document.getElementById('column-tratados').appendChild(createCard(processo)));
 
-            // Renderiza os cards nas colunas corretas
-            processos.forEach(processo => {
-                const card = createCard(processo);
-                let targetColumn;
-                
-                // NOVO: Prioriza a coluna de Histórico se houver data de conclusão
-                if (processo.dataConclusao) {
-                    targetColumn = document.getElementById('column-concluidos-historico');
-                } else {
-                    // Se não tiver data de conclusão, usa o status normal
-                    switch (processo.status) {
-                        case 'tratamento':
-                            targetColumn = document.getElementById('column-tratamento');
-                            break;
-                        case 'tratados':
-                            targetColumn = document.getElementById('column-tratados');
-                            break;
-                        case 'proximos':
-                            targetColumn = document.getElementById('column-proximos');
-                            break;
-                    }
-                }
-                
-                if (targetColumn) {
-                    targetColumn.appendChild(card);
-                }
-            });
+            // Coluna Próximos
+            proximos.forEach(processo => document.getElementById('column-proximos').appendChild(createCard(processo)));
+
+            // Coluna Histórico (Ordenada)
+            historico.forEach(processo => document.getElementById('column-concluidos-historico').appendChild(createCard(processo)));
+
             filterCards(); // Aplica os filtros atuais após a renderização
         }
 
@@ -538,7 +597,7 @@
 
             // Sanitiza os valores (opcionais podem ser string vazia)
             const dataPrevisao = document.getElementById('edit-data-previsao').value.trim();
-            const dataConclusao = document.getElementById('edit-data-conclusao').value.trim(); // Novo
+            const dataConclusao = document.getElementById('edit-data-conclusao').value.trim(); 
 
             // Atualiza o objeto processo
             processos[index] = {
@@ -548,7 +607,7 @@
                 nome: document.getElementById('edit-nome').value,
                 dataRegistro: document.getElementById('edit-data-registro').value,
                 dataPrevisao: dataPrevisao, 
-                dataConclusao: dataConclusao, // Novo campo
+                dataConclusao: dataConclusao, 
                 detalhes: document.getElementById('edit-detalhes').value || 'Nenhum detalhe fornecido.',
             };
 
@@ -613,7 +672,7 @@
             
             const dataPrevisaoValue = document.getElementById('data-previsao').value.trim();
             const dataRegistroValue = document.getElementById('data-registro').value;
-            const dataConclusaoValue = document.getElementById('data-conclusao').value.trim(); // Novo
+            const dataConclusaoValue = document.getElementById('data-conclusao').value.trim(); 
 
             const novoProcesso = {
                 colaborador: document.getElementById('colaborador').value,
@@ -621,7 +680,7 @@
                 nome: document.getElementById('processo-nome').value,
                 dataRegistro: dataRegistroValue,
                 dataPrevisao: dataPrevisaoValue,
-                dataConclusao: dataConclusaoValue, // Novo campo
+                dataConclusao: dataConclusaoValue, 
                 detalhes: document.getElementById('detalhes').value || 'Nenhum detalhe fornecido.',
                 id: Date.now() 
             };
@@ -633,7 +692,7 @@
             // Limpa campos específicos
             document.getElementById('processo-nome').value = '';
             document.getElementById('data-previsao').value = ''; 
-            document.getElementById('data-conclusao').value = ''; // Limpa conclusão
+            document.getElementById('data-conclusao').value = ''; 
             document.getElementById('detalhes').value = '';
             
             document.getElementById('data-registro').value = getTodayDateString(); 
@@ -648,24 +707,28 @@
             if (processos.length === 0) {
                 const today = getTodayDateString();
                 const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]; 
+                const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0]; 
                 const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
                 const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-
+                const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
 
                 processos = [
-                    // Exemplo com data de previsão (Em Tratamento)
+                    // 1. Em Tratamento (Não Concluído)
                     { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos', dataRegistro: yesterday, dataPrevisao: today, dataConclusao: '', detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta.', id: 1 },
                     
-                    // Exemplo com data de conclusão (Vai para Histórico)
+                    // 2. Tratados na Semana (A data de conclusão é hoje, então cai na coluna TRATADOS NA SEMANA)
                     { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', dataRegistro: yesterday, dataPrevisao: yesterday, dataConclusao: today, detalhes: 'Migração para novo ambiente AWS concluída com sucesso e documentada.', id: 2 },
                     
-                    // Exemplo com data de conclusão antiga (Vai para Histórico)
-                    { colaborador: 'Felipe', status: 'tratados', nome: 'Revisão Contratual Cliente Gama', dataRegistro: lastWeek, dataPrevisao: lastWeek, dataConclusao: lastWeek, detalhes: 'Contrato revisto e assinado. Processo de arquivamento finalizado.', id: 5 },
+                    // 3. Histórico de Concluídos (Este é o MAIS RECENTE do histórico - aparecerá primeiro)
+                    { colaborador: 'Mariane', status: 'tratados', nome: 'Fechamento Contábil do Mês', dataRegistro: twoDaysAgo, dataPrevisao: lastWeek, dataConclusao: yesterday, detalhes: 'Fechamento finalizado e documentos enviados ao setor financeiro.', id: 6 },
                     
-                    // Exemplo com data de previsão (Próximos)
+                    // 4. Histórico de Concluídos (Este é o MAIS ANTIGO do histórico - aparecerá por último)
+                    { colaborador: 'Felipe', status: 'tratados', nome: 'Revisão Contratual Cliente Gama', dataRegistro: lastWeek, dataPrevisao: lastWeek, dataConclusao: twoWeeksAgo, detalhes: 'Contrato revisto e assinado. Processo de arquivamento finalizado.', id: 5 },
+                    
+                    // 5. Próximos Processos (Não Concluído)
                     { colaborador: 'Emily', status: 'proximos', nome: 'Planejamento de Campanha Q4', dataRegistro: today, dataPrevisao: nextWeek, dataConclusao: '', detalhes: 'Definir budget, criar criativos e segmentar público-alvo.', id: 3 },
                     
-                    // Exemplo sem datas extras (Em Tratamento)
+                    // 6. Em Tratamento (Não Concluído)
                     { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', dataRegistro: today, dataPrevisao: '', dataConclusao: '', detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
                 ];
             }
