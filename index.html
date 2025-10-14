@@ -18,16 +18,39 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--color-bg);
         }
+        
         /* Estilos customizados para as colunas do Kanban */
         .board-column {
             min-width: 300px;
             max-width: 350px;
             flex-shrink: 0;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-            /* NOVO: Configuração para rolagem interna na coluna */
+            /* Configuração para rolagem interna na coluna */
             max-height: 70vh; /* Altura máxima para ativar a rolagem (70% do viewport) */
             overflow-y: auto; /* Habilita a rolagem vertical */
         }
+        
+        /* Estilo para fixar o título da coluna (Kanban Header Sticky) */
+        .kanban-header-sticky {
+            position: sticky;
+            top: 0; /* Fixa o título no topo da área de rolagem interna */
+            z-index: 10;
+            background-color: white; /* Garante que ele cubra os cards ao rolar */
+            
+            /* Ajusta o espaçamento e borda para manter a estética do design */
+            padding-top: 1.25rem; /* p-5 da coluna */
+            margin-top: -1.25rem; /* Compensa o p-5 superior da coluna */
+            padding-left: 1.25rem; /* p-5 da coluna */
+            margin-left: -1.25rem; /* Compensa o p-5 esquerdo da coluna */
+            padding-right: 1.25rem; /* p-5 da coluna */
+            margin-right: -1.25rem; /* Compensa o p-5 direito da coluna */
+            padding-bottom: 1rem; /* pb-4 original do h3 */
+            margin-bottom: 0.5rem; /* mb-2 ajustado */
+            
+            /* Sombra sutil para efeito de flutuação */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+        }
+        
         /* Estilos para a barra de rolagem (melhor compatibilidade com Webkit) */
         .board-column::-webkit-scrollbar {
             width: 8px;
@@ -89,13 +112,13 @@
 <body class="p-4 sm:p-8">
 
     <!-- Cabeçalho Principal Moderno com Gradient Tecnológico (Azul/Índigo Escuro) -->
-    <header class="bg-gradient-to-r from-slate-800 to-indigo-700 rounded-xl shadow-2xl p-8 mb-8 text-center">
+    <header class="bg-gradient-to-r from-slate-800 to-indigo-700 rounded-xl shadow-2xl p-8 mb-4 text-center">
         <h1 class="text-4xl font-black text-white">Dashboard de Acompanhamento Semanal</h1>
         <p class="text-indigo-200 mt-2 text-lg">Visão dinâmica e eficiente dos processos da equipe.</p>
     </header>
 
     <!-- Seção de Filtros -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 grid grid-cols-1 md:grid-cols-5 gap-4 items-end border-t-4 border-indigo-400">
+    <div class="bg-white rounded-xl shadow-lg p-6 grid grid-cols-1 md:grid-cols-5 gap-4 items-end border-t-4 border-indigo-400 mb-8">
         <h2 class="text-xl font-bold text-slate-700 col-span-full md:col-span-5 border-b pb-2">Filtros Avançados:</h2>
 
         <!-- Filtro por Colaborador -->
@@ -120,13 +143,19 @@
             </button>
         </div>
     </div>
+    
+    <!-- FIM da Seção de Filtros -->
 
+    <!-- TÍTULO DE SEÇÃO para o Kanban Board -->
+    <h2 class="text-3xl font-black text-slate-700 mt-8 mb-4">Kanban de Processos</h2>
+    
     <!-- Dashboard Kanban -->
-    <div class="flex space-x-6 overflow-x-auto pb-6">
+    <div class="flex space-x-6 overflow-x-auto pt-2 pb-6">
         
         <!-- Coluna 1: Em Tratamento -->
         <div id="column-tratamento" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <h3 class="text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 pb-3 mb-4 flex items-center">
+            <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
+            <h3 class="kanban-header-sticky text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 flex items-center">
                 <span class="mr-2 text-2xl">🔥</span> Em Tratamento
             </h3>
             <!-- Cards inseridos aqui pelo JS -->
@@ -134,7 +163,8 @@
 
         <!-- Coluna 2: Tratados na Semana -->
         <div id="column-tratados" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <h3 class="text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 pb-3 mb-4 flex items-center">
+            <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
+            <h3 class="kanban-header-sticky text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 flex items-center">
                 <span class="mr-2 text-2xl">✨</span> Tratados na Semana
             </h3>
             <!-- Cards inseridos aqui pelo JS -->
@@ -142,7 +172,8 @@
 
         <!-- Coluna 3: Próximos Processos -->
         <div id="column-proximos" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <h3 class="text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 pb-3 mb-4 flex items-center">
+            <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
+            <h3 class="kanban-header-sticky text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 flex items-center">
                 <span class="mr-2 text-2xl">🚀</span> Próximos Processos
             </h3>
             <!-- Cards inseridos aqui pelo JS -->
@@ -150,7 +181,8 @@
         
         <!-- Coluna 4: Histórico de Concluídos (Novo Dashboard) -->
         <div id="column-concluidos-historico" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <h3 class="text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 pb-3 mb-4 flex items-center">
+            <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
+            <h3 class="kanban-header-sticky text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 flex items-center">
                 <span class="mr-2 text-2xl">✅</span> Histórico de Concluídos
             </h3>
             <!-- Cards inseridos aqui pelo JS (Itens com dataConclusao) -->
@@ -425,10 +457,11 @@
 
         function renderDashboard() {
             // Limpa as colunas e recria os títulos
-            document.getElementById('column-tratamento').innerHTML = '<h3 class="text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
-            document.getElementById('column-tratados').innerHTML = '<h3 class="text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
-            document.getElementById('column-proximos').innerHTML = '<h3 class="text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
-            document.getElementById('column-concluidos-historico').innerHTML = '<h3 class="text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 pb-3 mb-4 flex items-center"><span class="mr-2 text-2xl">✅</span> Histórico de Concluídos</h3>';
+            // IMPORTANTE: Manter a classe .kanban-header-sticky
+            document.getElementById('column-tratamento').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
+            document.getElementById('column-tratados').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
+            document.getElementById('column-proximos').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
+            document.getElementById('column-concluidos-historico').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 flex items-center"><span class="mr-2 text-2xl">✅</span> Histórico de Concluídos</h3>';
 
 
             // Renderiza os cards nas colunas corretas
