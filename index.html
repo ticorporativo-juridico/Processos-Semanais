@@ -307,10 +307,10 @@
                     <p class="text-sm text-gray-500">Insira suas credenciais de acesso restrito.</p>
 
                     <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                        <input type="text" id="report-user-name" placeholder="Nome (Ex: Dra. Cássia)"
+                        <input type="text" id="report-user-name" placeholder="Nome (Ex: Cássia ou Dra. Cássia)"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
                                autocomplete="username">
-                        <!-- MUDANÇA: maxlength atualizado para 6 (ex: 1234$C) -->
+                        <!-- PIN de 6 caracteres, instrução removida -->
                         <input type="password" id="report-user-pin" placeholder="PIN (Senha)"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
                                autocomplete="current-password"
@@ -333,8 +333,15 @@
                     <div id="report-content" class="h-[60vh] overflow-y-auto pr-2">
                         <!-- Conteúdo da tabela será injetado aqui -->
                     </div>
+                    
+                    <!-- NOVO BOTÃO DE EXPORTAÇÃO PARA CSV/EXCEL -->
+                    <button onclick="downloadReportAsCsv()"
+                            class="mt-4 w-full bg-green-600 text-white py-2 rounded-xl font-bold hover:bg-green-700 transition duration-200 shadow-md">
+                        Baixar Relatório Completo (CSV/Excel)
+                    </button>
+
                     <button onclick="handleReportLogout()"
-                            class="mt-6 w-full bg-red-500 text-white py-2 rounded-xl font-bold hover:bg-red-600 transition duration-200">
+                            class="mt-3 w-full bg-red-500 text-white py-2 rounded-xl font-bold hover:bg-red-600 transition duration-200">
                         Sair e Bloquear Relatório
                     </button>
                 </div>
@@ -894,6 +901,14 @@
             reportContent.innerHTML = html;
         }
 
+        // Função de normalização de nome APERFEIÇOADA (ignora acentos, caixa alta/baixa e o prefixo "dra. ")
+        const normalizeName = (n) => n
+            .toLowerCase()
+            .normalize("NFD") // Decomposição de caracteres (para separar acentos)
+            .replace(/[\u0300-\u036f]/g, "") // Remove acentos (diacríticos)
+            .replace('dra. ', '') // Remove prefixo 'dra. '
+            .trim(); 
+
         function handleReportAuthentication() {
             const name = reportUserNameInput.value.trim();
             const pin = reportUserPinInput.value.trim();
@@ -907,9 +922,13 @@
             reportButtonText.textContent = 'Verificando...';
             extractReportButton.disabled = true;
 
-            const user = authorizedUsers.find(u => 
-                u.name.toLowerCase() === name.toLowerCase() && u.pin === pin
-            );
+            const normalizedInputName = normalizeName(name);
+
+            const user = authorizedUsers.find(u => {
+                const normalizedStoredName = normalizeName(u.name);
+                // Compara o nome normalizado E o PIN EXATO
+                return normalizedStoredName === normalizedInputName && u.pin === pin;
+            });
             
             // Simula a verificação de credenciais com um pequeno atraso
             setTimeout(() => { 
@@ -930,6 +949,59 @@
              displayReportMessage("Sessão encerrada. Relatório bloqueado.", 'info');
              toggleReportView(false);
         }
+
+        /**
+         * NOVO: Converte os dados do Kanban em CSV e inicia o download.
+         */
+        function downloadReportAsCsv() {
+            if (processos.length === 0) {
+                displayReportMessage('Não há dados para exportar.', 'info');
+                return;
+            }
+
+            const headers = ['ID', 'Nome do Processo', 'Colaborador', 'Status', 'Data de Registro', 'Data de Previsao', 'Data de Conclusao', 'Detalhes'];
+            
+            // Usa ponto e vírgula (;) como separador para melhor compatibilidade com o Excel em configurações regionais PT-BR
+            let csv = headers.join(';') + '\n'; 
+
+            processos.forEach(p => {
+                // Função para formatar o texto para CSV (escapa aspas duplas, garante string)
+                const csvSafe = (text) => `"${(text || '').toString().replace(/"/g, '""')}"`;
+                
+                const row = [
+                    csvSafe(p.id),
+                    csvSafe(p.nome),
+                    csvSafe(p.colaborador),
+                    csvSafe(p.status),
+                    p.dataRegistro || '',
+                    p.dataPrevisao || '',
+                    p.dataConclusao || '',
+                    csvSafe(p.detalhes)
+                ];
+                csv += row.join(';') + '\n';
+            });
+
+            // Byte Order Mark (BOM) para garantir que o Excel abra corretamente com UTF-8
+            const BOM = "\uFEFF"; 
+            const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.setAttribute('download', `relatorio_processos_${getTodayDateString()}.csv`);
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            
+            // Inicia o download
+            a.click();
+            
+            // Limpa recursos
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            displayReportMessage('Relatório CSV baixado com sucesso!', 'success');
+        }
+
 
         // ------------------ Funções de Inicialização (Firebase) ------------------
 
@@ -968,7 +1040,7 @@
             const initialConfig = {
                 // Usuários autorizados: Dra. Cássia e Dra. Janaína (credenciais para o Modal de Relatório)
                 users: [
-                    // MUDANÇA: PINs atualizados para 1234$C e 5678$J
+                    // PINs: 1234$C e 5678$J
                     { name: 'Dra. Cássia', pin: '1234$C' }, 
                     { name: 'Dra. Janaína', pin: '5678$J' }
                 ],
@@ -1026,6 +1098,7 @@
         window.openReportModal = openReportModal;
         window.closeReportModal = closeReportModal;
         window.handleReportLogout = handleReportLogout;
+        window.downloadReportAsCsv = downloadReportAsCsv; // NOVO: Expondo função de download
 
     </script>
 </body>
