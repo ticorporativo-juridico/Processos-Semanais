@@ -304,16 +304,17 @@
                 <!-- Estado: Login (Inicial) -->
                 <div id="report-login-section" class="space-y-6 text-center">
                     <h2 class="text-2xl font-black text-gray-700 border-b pb-2">Acesso Exclusivo ao Relatório</h2>
-                    <p class="text-sm text-gray-500">Insira as credenciais da Dra. Cássia ou Dra. Janaína.</p>
+                    <p class="text-sm text-gray-500">Insira suas credenciais de acesso restrito.</p>
 
                     <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                         <input type="text" id="report-user-name" placeholder="Nome (Ex: Dra. Cássia)"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
                                autocomplete="username">
+                        <!-- MUDANÇA: maxlength atualizado para 6 (ex: 1234$C) -->
                         <input type="password" id="report-user-pin" placeholder="PIN (Senha)"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
                                autocomplete="current-password"
-                               maxlength="4">
+                               maxlength="6"> 
                     </div>
 
                     <button id="extract-report-button"
@@ -461,7 +462,7 @@
             }
         }
         
-        // ------------------ Funções de UI Kanban (Mantidas) ------------------
+        // ------------------ Funções de UI Kanban ------------------
 
         function setupCollaboratorSelects() {
             // Lógica de preenchimento dos selects com os nomes dos colaboradores
@@ -705,6 +706,7 @@
             filterCards();
         }
 
+        // Handler para o formulário principal
         document.getElementById('process-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -966,8 +968,9 @@
             const initialConfig = {
                 // Usuários autorizados: Dra. Cássia e Dra. Janaína (credenciais para o Modal de Relatório)
                 users: [
-                    { name: 'Dra. Cássia', pin: '1234' },
-                    { name: 'Dra. Janaína', pin: '5678' }
+                    // MUDANÇA: PINs atualizados para 1234$C e 5678$J
+                    { name: 'Dra. Cássia', pin: '1234$C' }, 
+                    { name: 'Dra. Janaína', pin: '5678$J' }
                 ],
             };
 
@@ -1010,6 +1013,19 @@
             renderDashboard(); 
             initializeFirebase(); // Inicializa o Firebase para a função de relatório
         });
+
+        // ==========================================================
+        // CORREÇÃO DE ESCOPO: Expondo funções para os eventos onclick
+        // ==========================================================
+        window.openEditModal = openEditModal;
+        window.closeEditModal = closeEditModal;
+        window.handleEditSubmit = handleEditSubmit;
+        window.deleteProcess = deleteProcess;
+        window.filterCards = filterCards;
+        window.clearFilters = clearFilters;
+        window.openReportModal = openReportModal;
+        window.closeReportModal = closeReportModal;
+        window.handleReportLogout = handleReportLogout;
 
     </script>
 </body>
