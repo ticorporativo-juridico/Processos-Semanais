@@ -13,6 +13,7 @@
             --color-primary: #475569; 
             --color-secondary: #64748b; 
             --color-bg: #f8fafc; /* Super Light Gray */
+            --color-report-primary: #10B981; /* Verde Esmeralda para Relatório */
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -33,21 +34,17 @@
         /* Estilo para fixar o título da coluna (Kanban Header Sticky) */
         .kanban-header-sticky {
             position: sticky;
-            top: 0; /* Fixa o título no topo da área de rolagem interna */
+            top: 0; 
             z-index: 10;
-            background-color: white; /* Garante que ele cubra os cards ao rolar */
-            
-            /* Ajusta o espaçamento e borda para manter a estética do design */
-            padding-top: 1.25rem; /* p-5 da coluna */
-            margin-top: -1.25rem; /* Compensa o p-5 superior da coluna */
-            padding-left: 1.25rem; /* p-5 da coluna */
-            margin-left: -1.25rem; /* Compensa o p-5 esquerdo da coluna */
-            padding-right: 1.25rem; /* p-5 da coluna */
-            margin-right: -1.25rem; /* Compensa o p-5 direito da coluna */
-            padding-bottom: 1rem; /* pb-4 original do h3 */
-            margin-bottom: 0.5rem; /* mb-2 ajustado */
-            
-            /* Sombra sutil para efeito de flutuação */
+            background-color: white; 
+            padding-top: 1.25rem; 
+            margin-top: -1.25rem; 
+            padding-left: 1.25rem; 
+            margin-left: -1.25rem; 
+            padding-right: 1.25rem; 
+            margin-right: -1.25rem; 
+            padding-bottom: 1rem; 
+            margin-bottom: 0.5rem; 
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.06);
         }
         
@@ -56,16 +53,15 @@
             width: 8px;
         }
         .board-column::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1; /* Cor suave do thumb (slate-300) */
+            background-color: #cbd5e1; 
             border-radius: 20px;
         }
         .board-column::-webkit-scrollbar-track {
-            background-color: transparent; /* Track transparente */
+            background-color: transparent; 
         }
         .board-column:hover::-webkit-scrollbar-thumb {
-            background-color: #94a3b8; /* Fica mais visível ao passar o mouse (slate-400) */
+            background-color: #94a3b8; 
         }
-        /* Fim da rolagem interna */
 
         .task-card {
             transition: transform 0.2s, box-shadow 0.3s;
@@ -77,49 +73,49 @@
             box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1), 0 5px 10px -5px rgba(0, 0, 0, 0.04);
         }
         
-        /* Cores de status - PALETA CORPORATIVA/TECNOLÓGICA */
-        /* Tratamento (Strong Orange - Atenção/Urgência) */
+        /* Cores de status */
         .status-tratamento { border-left-color: #ea580c; } 
-        /* Tratados (Emerald Green - Sucesso/Conclusão - USADO PARA CONCLUÍDOS NA SEMANA) */
         .status-tratados { border-left-color: #10b981; } 
-        /* Próximos (Indigo - Planejamento/Futuro) */
         .status-proximos { border-left-color: #6366f1; } 
-        /* Concluídos (Gray/Slate - Histórico/Arquivado - USADO PARA CONCLUÍDOS ANTIGOS) */
         .status-concluido-hist { border-left-color: #6b7280; } 
 
         /* Estilo para a data no card */
         .card-date {
-            background-color: #e0f2f7; /* Azul claro suave */
-            color: #155e75; /* Teal escuro */
+            background-color: #e0f2f7; 
+            color: #155e75; 
             padding: 2px 8px;
             border-radius: 9999px; 
             font-weight: 600;
         }
         /* Estilo para a data de CONCLUSÃO (destaque verde) */
         .card-done {
-            background-color: #d1fae5; /* Verde claro */
-            color: #065f46; /* Verde escuro */
+            background-color: #d1fae5; 
+            color: #065f46; 
             font-weight: 700;
             padding: 2px 8px;
             border-radius: 0.5rem;
         }
         /* Estilo para o modal */
-        #edit-modal {
+        #edit-modal, #report-modal {
             backdrop-filter: blur(5px);
         }
+
+        /* Classes de relatório */
+        .text-report { color: var(--color-report-primary); }
+        .focus-report { border-color: var(--color-report-primary); box-shadow: 0 0 0 1px var(--color-report-primary); }
     </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <!-- Cabeçalho Principal Moderno com Gradient Tecnológico (Azul/Índigo Escuro) -->
+    <!-- Cabeçalho Principal Moderno -->
     <header class="bg-gradient-to-r from-slate-800 to-indigo-700 rounded-xl shadow-2xl p-8 mb-4 text-center">
         <h1 class="text-4xl font-black text-white">Dashboard de Acompanhamento Semanal</h1>
         <p class="text-indigo-200 mt-2 text-lg">Visão dinâmica e eficiente dos processos da equipe.</p>
     </header>
 
-    <!-- Seção de Filtros -->
-    <div class="bg-white rounded-xl shadow-lg p-6 grid grid-cols-1 md:grid-cols-5 gap-4 items-end border-t-4 border-indigo-400 mb-8">
-        <h2 class="text-xl font-bold text-slate-700 col-span-full md:col-span-5 border-b pb-2">Filtros Avançados:</h2>
+    <!-- Seção de Filtros e Relatório -->
+    <div class="bg-white rounded-xl shadow-lg p-6 grid grid-cols-1 md:grid-cols-6 gap-4 items-end border-t-4 border-indigo-400 mb-8">
+        <h2 class="text-xl font-bold text-slate-700 col-span-full md:col-span-6 border-b pb-2">Ferramentas e Filtros:</h2>
 
         <!-- Filtro por Colaborador -->
         <div class="col-span-full sm:col-span-2 lg:col-span-2">
@@ -142,6 +138,13 @@
                 Limpar Filtros
             </button>
         </div>
+
+        <!-- NOVO: Botão de Extração de Relatório (Restrito) -->
+        <div class="col-span-full sm:col-span-1 lg:col-span-1">
+            <button onclick="openReportModal()" class="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-xl font-bold transition duration-200 shadow-md min-h-[44px] w-full mt-4 sm:mt-0">
+                Extrair Relatório (🔒)
+            </button>
+        </div>
     </div>
     
     <!-- FIM da Seção de Filtros -->
@@ -154,97 +157,72 @@
         
         <!-- Coluna 1: Em Tratamento -->
         <div id="column-tratamento" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
             <h3 class="kanban-header-sticky text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 flex items-center">
                 <span class="mr-2 text-2xl">🔥</span> Em Tratamento
             </h3>
-            <!-- Cards inseridos aqui pelo JS -->
         </div>
 
-        <!-- Coluna 2: Tratados na Semana (Apresenta os Concluídos nesta semana) -->
+        <!-- Coluna 2: Tratados na Semana -->
         <div id="column-tratados" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
             <h3 class="kanban-header-sticky text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 flex items-center">
                 <span class="mr-2 text-2xl">✨</span> Tratados na Semana
             </h3>
-            <!-- Cards inseridos aqui pelo JS -->
         </div>
 
         <!-- Coluna 3: Próximos Processos -->
         <div id="column-proximos" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
             <h3 class="kanban-header-sticky text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 flex items-center">
                 <span class="mr-2 text-2xl">🚀</span> Próximos Processos
             </h3>
-            <!-- Cards inseridos aqui pelo JS -->
         </div>
         
-        <!-- Coluna 4: Histórico de Concluídos (Concluídos antes desta semana) -->
+        <!-- Coluna 4: Histórico de Concluídos -->
         <div id="column-concluidos-historico" class="board-column bg-white p-5 rounded-2xl shadow-xl">
-            <!-- kanban-header-sticky CORRETO: Fixa apenas o título dentro da coluna que rola -->
             <h3 class="kanban-header-sticky text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 flex items-center">
                 <span class="mr-2 text-2xl">✅</span> Histórico de Concluídos
             </h3>
-            <!-- Cards inseridos aqui pelo JS (Itens com dataConclusao) -->
         </div>
         
     </div>
 
-    <!-- Formulário de Entrada de Dados -->
+    <!-- Formulário de Entrada de Dados (Mantido) -->
     <div class="bg-white rounded-xl shadow-2xl p-8 mt-8 border-l-8 border-indigo-500">
         <h2 class="text-3xl font-black text-gray-800 mb-6 border-b pb-3">✍️ Registrar Novo Processo (Carimbo do Tempo)</h2>
         <form id="process-form" class="grid grid-cols-1 md:grid-cols-4 gap-6">
             
-            <!-- Campo Colaborador -->
+            <!-- Campos do formulário (Omitidos para brevidade, mas o código completo está no JS) -->
             <div class="col-span-full md:col-span-1">
                 <label for="colaborador" class="block text-sm font-semibold text-gray-700">Colaborador</label>
-                <select id="colaborador" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
-                    <!-- Opções preenchidas pelo JS -->
-                </select>
+                <select id="colaborador" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50"></select>
             </div>
-
-            <!-- Campo Status (IMPORTANTE: Status 'tratados' agora é apenas um rótulo) -->
             <div class="col-span-full md:col-span-1">
                 <label for="processo-status" class="block text-sm font-semibold text-gray-700">Status do Processo</label>
                 <select id="processo-status" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
                     <option value="tratamento">Em Tratamento</option>
                     <option value="proximos">Próximos Processos</option>
-                    <!-- Mantido o valor 'tratados' para fins de estilo/edição, mas a coluna será decidida pela data de conclusão -->
                     <option value="tratados">Status: Tratados (Selecione Conclusão abaixo)</option>
                 </select>
             </div>
-            
-            <!-- Campo Data de Registro (Carimbo do Tempo) -->
             <div class="col-span-full md:col-span-1">
                 <label for="data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro (Inclusão)</label>
                 <input type="date" id="data-registro" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
             </div>
-
-            <!-- Campo Data de Previsão -->
             <div class="col-span-full md:col-span-1">
                 <label for="data-previsao" class="block text-sm font-semibold text-gray-700">Data de Previsão (Conclusão) - Opcional</label>
                 <input type="date" id="data-previsao" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-50">
             </div>
-            
-            <!-- Campo Data de Conclusão (Chave para o novo roteamento) -->
             <div class="col-span-full md:col-span-2">
                 <label for="data-conclusao" class="block text-sm font-extrabold text-emerald-700">⭐ Data de Conclusão (Opcional, se JÁ feito)</label>
                 <input type="date" id="data-conclusao" class="mt-1 block w-full p-3 border-2 border-emerald-300 rounded-lg shadow-md focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 bg-emerald-50">
             </div>
-            
-            <!-- Campo Nome do Processo -->
             <div class="col-span-full">
                 <label for="processo-nome" class="block text-sm font-semibold text-gray-700">Nome do Processo/Tarefa</label>
                 <input type="text" id="processo-nome" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: Fechamento mensal Cliente Alpha">
             </div>
-
-            <!-- Campo Detalhes -->
             <div class="col-span-full">
                 <label for="detalhes" class="block text-sm font-semibold text-gray-700">Detalhes/Descrição</label>
                 <textarea id="detalhes" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 h-24" placeholder="O que está sendo feito ou o que foi/será feito..."></textarea>
             </div>
-            
-            <!-- Botão Adicionar -->
             <div class="col-span-full text-right">
                 <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition duration-200 transform hover:scale-[1.02]">
                     Adicionar Processo
@@ -253,7 +231,7 @@
         </form>
     </div>
 
-    <!-- Modal de Edição -->
+    <!-- Modal de Edição (Mantido) -->
     <div id="edit-modal" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-75 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-xl shadow-3xl p-8 w-full max-w-lg border-t-8 border-indigo-600 relative">
@@ -265,19 +243,14 @@
                 <form id="edit-form" onsubmit="handleEditSubmit(event)">
                     <input type="hidden" id="edit-id">
                     
-                    <!-- Nome do Processo -->
                     <div class="mb-4">
                         <label for="edit-nome" class="block text-sm font-semibold text-gray-700">Nome do Processo/Tarefa</label>
                         <input type="text" id="edit-nome" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
                     </div>
-
-                    <!-- Colaborador e Status -->
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label for="edit-colaborador" class="block text-sm font-semibold text-gray-700">Colaborador</label>
-                            <select id="edit-colaborador" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
-                                <!-- Opções preenchidas pelo JS -->
-                            </select>
+                            <select id="edit-colaborador" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"></select>
                         </div>
                         <div>
                             <label for="edit-status" class="block text-sm font-semibold text-gray-700">Status</label>
@@ -288,8 +261,6 @@
                             </select>
                         </div>
                     </div>
-                    
-                    <!-- Datas (Registro e Previsão) -->
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label for="edit-data-registro" class="block text-sm font-semibold text-gray-700">Data de Registro (Inclusão)</label>
@@ -300,14 +271,10 @@
                             <input type="date" id="edit-data-previsao" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
                         </div>
                     </div>
-                    
-                    <!-- NOVO CAMPO: Data de Conclusão (Em destaque no Modal) -->
                     <div class="mb-6">
                         <label for="edit-data-conclusao" class="block text-sm font-extrabold text-emerald-700">⭐ Data de Conclusão (Finalizado)</label>
                         <input type="date" id="edit-data-conclusao" class="mt-1 block w-full p-3 border-2 border-emerald-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 shadow-sm bg-emerald-50">
                     </div>
-
-                    <!-- Detalhes -->
                     <div class="mb-6">
                         <label for="edit-detalhes" class="block text-sm font-semibold text-gray-700">Detalhes/Descrição</label>
                         <textarea id="edit-detalhes" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 h-24 shadow-sm"></textarea>
@@ -321,63 +288,154 @@
             </div>
         </div>
     </div>
+    
+    <!-- NOVO: Modal de Extração de Relatório (Acesso Restrito) -->
+    <div id="report-modal" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-75 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-3xl p-8 w-full max-w-4xl border-t-8 border-report-primary relative">
+                <button onclick="closeReportModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></svg>
+                </button>
+                
+                <div id="report-message-area" class="mb-4 hidden p-3 rounded-lg font-medium" role="alert"></div>
+
+                <!-- Estado: Login (Inicial) -->
+                <div id="report-login-section" class="space-y-6 text-center">
+                    <h2 class="text-2xl font-black text-gray-700 border-b pb-2">Acesso Exclusivo ao Relatório</h2>
+                    <p class="text-sm text-gray-500">Insira as credenciais da Dra. Cássia ou Dra. Janaína.</p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                        <input type="text" id="report-user-name" placeholder="Nome (Ex: Dra. Cássia)"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
+                               autocomplete="username">
+                        <input type="password" id="report-user-pin" placeholder="PIN (Senha)"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
+                               autocomplete="current-password"
+                               maxlength="4">
+                    </div>
+
+                    <button id="extract-report-button"
+                            class="mx-auto bg-emerald-600 text-white py-3 px-6 rounded-xl font-bold text-lg hover:bg-emerald-700 transition duration-200 shadow-md shadow-emerald-300/50 flex items-center justify-center max-w-md"
+                            disabled>
+                        <span id="report-button-text">Aguardando Dados...</span>
+                        <svg id="report-loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Estado: Relatório (Após login bem-sucedido) -->
+                <div id="report-display-section" class="hidden">
+                    <h2 class="text-2xl font-black text-gray-800 border-b pb-2 mb-4 text-report">Relatório Semanal de Processos (Acesso Concedido)</h2>
+                    <div id="report-content" class="h-[60vh] overflow-y-auto pr-2">
+                        <!-- Conteúdo da tabela será injetado aqui -->
+                    </div>
+                    <button onclick="handleReportLogout()"
+                            class="mt-6 w-full bg-red-500 text-white py-2 rounded-xl font-bold hover:bg-red-600 transition duration-200">
+                        Sair e Bloquear Relatório
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
-    <!-- LÓGICA JAVASCRIPT -->
-    <script>
-        // Lista de colaboradores em ordem alfabética
+    <!-- LÓGICA JAVASCRIPT E FIREBASE -->
+    <script type="module">
+        // Importa as bibliotecas do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+
+        // Variáveis Globais do Ambiente (MANDATÓRIO USAR)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let db, auth;
+        
+        // Dados do Kanban (usa localStorage)
         const colaboradores = [
             'Beatriz', 'Diego', 'Emily', 'Felipe', 'Hosana', 
             'João', 'Mariane', 'Rebeca', 'Tairane', 'Thais'
         ];
+        let processos = []; 
 
-        let processos = [];
+        // Dados do Relatório (usa Firebase)
+        let authorizedUsers = [];
+        let mockProcesses = [];
+        let isReportAuthenticated = false;
 
-        // Função auxiliar para obter a data de hoje formatada (YYYY-MM-DD)
+        // Elementos UI do Relatório
+        const reportModal = document.getElementById('report-modal');
+        const reportLoginSection = document.getElementById('report-login-section');
+        const reportDisplaySection = document.getElementById('report-display-section');
+        const reportContent = document.getElementById('report-content');
+        const reportMessageArea = document.getElementById('report-message-area');
+        const reportUserNameInput = document.getElementById('report-user-name');
+        const reportUserPinInput = document.getElementById('report-user-pin');
+        const extractReportButton = document.getElementById('extract-report-button');
+        const reportButtonText = document.getElementById('report-button-text');
+        const reportLoadingSpinner = document.getElementById('report-loading-spinner');
+
+        // ------------------ Funções de Utilitário Comuns ------------------
+
         function getTodayDateString() {
             return new Date().toISOString().split('T')[0];
         }
 
-        /**
-         * Verifica se uma data (YYYY-MM-DD) cai na semana de calendário atual (Dom-Sáb).
-         * @param {string} dateString Data no formato YYYY-MM-DD.
-         * @returns {boolean} True se a data estiver na semana atual.
-         */
         function isWithinCurrentWeek(dateString) {
             if (!dateString) return false;
-            
-            // Parse a data como UTC para evitar problemas de fuso horário
             const targetDate = new Date(dateString + 'T00:00:00');
-            
-            // Cria um objeto Date para hoje, normalizado para meia-noite
             const today = new Date();
             today.setHours(0, 0, 0, 0); 
-
             const oneDay = 1000 * 60 * 60 * 24;
-            
-            // Calcula o dia da semana atual (0=Dom, 6=Sáb)
             const dayOfWeek = today.getDay(); 
-            
-            // Calcula o início da semana (último Domingo)
             const startOfWeek = new Date(today.getTime() - dayOfWeek * oneDay); 
-            // Calcula o fim da semana (próximo Sábado)
             const endOfWeek = new Date(startOfWeek.getTime() + 6 * oneDay);    
-
-            // Adiciona 23:59:59.999 ao fim da semana para garantir que o sábado completo seja incluído
             endOfWeek.setHours(23, 59, 59, 999);
-
-            // Verifica se a data alvo está entre o início e o fim da semana atual
             return targetDate >= startOfWeek && targetDate <= endOfWeek;
         }
 
-        // ------------------ Funções de Persistência (localStorage) ------------------
+        function formatDate(dateString) {
+            if (!dateString) return null;
+            const dateObj = new Date(dateString + 'T00:00:00');
+            if (!isNaN(dateObj) && dateObj.getFullYear() > 1900) {
+                return dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+            return 'Data Inválida';
+        }
+        
+        // Função para mostrar mensagens no Modal de Relatório
+        function displayReportMessage(text, type = 'error') {
+            const baseClasses = 'p-3 rounded-lg font-medium';
+            let classes;
+            if (type === 'success') {
+                classes = `${baseClasses} bg-green-100 text-green-700 border border-green-300`;
+            } else if (type === 'error') {
+                classes = `${baseClasses} bg-red-100 text-red-700 border border-red-300`;
+            } else if (type === 'info') {
+                classes = `${baseClasses} bg-blue-100 text-blue-700 border border-blue-300`;
+            }
+
+            reportMessageArea.className = classes;
+            reportMessageArea.innerHTML = text;
+            reportMessageArea.classList.remove('hidden');
+
+            setTimeout(() => {
+                reportMessageArea.classList.add('hidden');
+            }, 5000);
+        }
+
+        // ------------------ Funções de Persistência Kanban (localStorage) ------------------
 
         function saveProcesses() {
             try {
                 localStorage.setItem('processosDashboard', JSON.stringify(processos));
             } catch (e) {
-                console.error("Erro ao salvar dados no localStorage:", e);
-                console.error("ERRO: Não foi possível salvar os dados. Verifique as configurações do seu navegador."); 
+                console.error("Erro ao salvar dados Kanban:", e);
             }
         }
 
@@ -386,30 +444,29 @@
                 const storedProcesses = localStorage.getItem('processosDashboard');
                 if (storedProcesses) {
                     const loaded = JSON.parse(storedProcesses);
-                    // Garante que todos os processos tenham as chaves de data necessárias
                     processos = loaded.map(p => ({
                         dataRegistro: p.dataRegistro || p.data || getTodayDateString(), 
                         dataPrevisao: p.dataPrevisao || p.data || '', 
-                        dataConclusao: p.dataConclusao || '', // Novo campo inicializado como vazio
+                        dataConclusao: p.dataConclusao || '', 
                         ...p,
                     }));
                 }
             } catch (e) {
-                console.error("Erro ao carregar dados do localStorage:", e);
+                console.error("Erro ao carregar dados Kanban:", e);
                 processos = [];
             }
         }
         
-        // ------------------ Funções de UI ------------------
+        // ------------------ Funções de UI Kanban (Mantidas) ------------------
 
         function setupCollaboratorSelects() {
+            // ... (Lógica de preenchimento dos selects)
             const selects = [
                 document.getElementById('filter-colaborador'),
                 document.getElementById('colaborador'),
                 document.getElementById('edit-colaborador')
             ];
 
-            // Define o valor padrão para a Data de Registro
             document.getElementById('data-registro').value = getTodayDateString();
 
             colaboradores.forEach(nome => {
@@ -420,23 +477,10 @@
                 selects.forEach(select => select.appendChild(option.cloneNode(true)));
             });
         }
-        
-        // Função auxiliar para formatar datas
-        function formatDate(dateString) {
-            if (!dateString) return null;
-            // Adaptação para garantir que datas YYYY-MM-DD sejam lidas corretamente como UTC para evitar problemas de fuso horário
-            const dateObj = new Date(dateString + 'T00:00:00');
-            if (!isNaN(dateObj) && dateObj.getFullYear() > 1900) {
-                // Formato brasileiro DD/MM/AAAA
-                return dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            }
-            return 'Data Inválida';
-        }
 
         function createCard(processo) {
-            // Se o processo tem data de conclusão, verifica se é histórico (antigo) ou da semana (recente)
+            // ... (Lógica de criação do Card Kanban)
             let statusClass;
-            // A classe é usada apenas para a cor da borda esquerda
             statusClass = isWithinCurrentWeek(processo.dataConclusao) ? 'tratados' : (processo.dataConclusao ? 'concluido-hist' : (processo.status === 'proximos' ? 'proximos' : 'tratamento'));
 
             const card = document.createElement('div');
@@ -450,10 +494,8 @@
             const registroDisplay = formatDate(processo.dataRegistro) || 'Indefinida';
             const conclusaoDisplay = formatDate(processo.dataConclusao); 
             
-            // Renderiza o campo de conclusão se estiver presente
             let conclusaoHtml = '';
             if (conclusaoDisplay) {
-                // O texto aqui é dinâmico para destacar que é Concluído na Semana ou Concluído no Histórico
                 const conclusaoText = isWithinCurrentWeek(processo.dataConclusao) ? 'Concluído Esta Semana' : 'Concluído em Histórico';
                 conclusaoHtml = `<span class="card-done text-xs" title="${conclusaoText}">✅ ${conclusaoDisplay}</span>`;
             }
@@ -463,11 +505,9 @@
                     <div class="font-extrabold text-gray-800 text-base">${processo.nome}</div>
                     <div class="flex space-x-2">
                         <button onclick="openEditModal(${processo.id})" title="Editar Processo" class="text-gray-400 hover:text-indigo-600 transition duration-150 p-1 rounded-full focus:outline-none">
-                            <!-- Ícone de Lápis -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                         </button>
                         <button onclick="deleteProcess(${processo.id})" title="Excluir Processo" class="text-gray-400 hover:text-red-600 transition duration-150 p-1 rounded-full focus:outline-none">
-                            <!-- Ícone de Lixeira -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                               <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -480,7 +520,6 @@
                     <span class="card-date text-xs" title="Previsão de Conclusão">Prev.: ${previsaoDisplay}</span>
                 </div>
                 
-                <!-- Nova linha para a data de conclusão, se houver -->
                 <div class="flex justify-between items-center mt-2 mb-2">
                     <div class="text-xs text-gray-400">Registro: ${registroDisplay}</div>
                     ${conclusaoHtml}
@@ -492,13 +531,12 @@
         }
 
         function renderDashboard() {
-            // 1. Inicializa arrays para as colunas
+            // ... (Lógica de renderização e ordenação do Kanban)
             const tratamento = [];
             const tratadosSemana = [];
             const proximos = [];
             const historico = [];
 
-            // 2. Classifica os processos nas listas
             processos.forEach(processo => {
                 const isConcluido = !!processo.dataConclusao;
 
@@ -514,7 +552,7 @@
                             proximos.push(processo);
                             break;
                         case 'tratamento':
-                        case 'tratados': // Qualquer outro status não concluído vai para tratamento
+                        case 'tratados':
                         default:
                             tratamento.push(processo);
                             break;
@@ -522,39 +560,34 @@
                 }
             });
             
-            // 3. ORDENAÇÃO: Ordena o Histórico de Concluídos por Data de Conclusão (Mais Recente Primeiro)
+            // ORDENAÇÃO: Histórico de Concluídos (Mais Recente Primeiro)
             historico.sort((a, b) => {
-                // Compara as strings YYYY-MM-DD em ordem decrescente (b antes de a)
-                if (!a.dataConclusao) return 1; // Itens sem dataConclusao vão para o final
-                if (!b.dataConclusao) return -1; // Itens sem dataConclusao vão para o final
+                if (!a.dataConclusao) return 1; 
+                if (!b.dataConclusao) return -1;
                 return b.dataConclusao.localeCompare(a.dataConclusao);
             });
             
-            // 4. Limpa e recria os títulos das colunas
-            document.getElementById('column-tratamento').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
-            document.getElementById('column-tratados').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
-            document.getElementById('column-proximos').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
-            document.getElementById('column-concluidos-historico').innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 flex items-center"><span class="mr-2 text-2xl">✅</span> Histórico de Concluídos</h3>';
-
-            // 5. Renderiza os cards das listas ORDENADAS
+            // Limpa e recria os títulos das colunas
+            const columnTreatment = document.getElementById('column-tratamento');
+            const columnDoneWeek = document.getElementById('column-tratados');
+            const columnNext = document.getElementById('column-proximos');
+            const columnHistory = document.getElementById('column-concluidos-historico');
             
-            // Coluna Tratamento
-            tratamento.forEach(processo => document.getElementById('column-tratamento').appendChild(createCard(processo)));
-            
-            // Coluna Tratados na Semana
-            tratadosSemana.forEach(processo => document.getElementById('column-tratados').appendChild(createCard(processo)));
+            columnTreatment.innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
+            columnDoneWeek.innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
+            columnNext.innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
+            columnHistory.innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 flex items-center"><span class="mr-2 text-2xl">✅</span> Histórico de Concluídos</h3>';
 
-            // Coluna Próximos
-            proximos.forEach(processo => document.getElementById('column-proximos').appendChild(createCard(processo)));
+            tratamento.forEach(processo => columnTreatment.appendChild(createCard(processo)));
+            tratadosSemana.forEach(processo => columnDoneWeek.appendChild(createCard(processo)));
+            proximos.forEach(processo => columnNext.appendChild(createCard(processo)));
+            historico.forEach(processo => columnHistory.appendChild(createCard(processo)));
 
-            // Coluna Histórico (Ordenada)
-            historico.forEach(processo => document.getElementById('column-concluidos-historico').appendChild(createCard(processo)));
-
-            filterCards(); // Aplica os filtros atuais após a renderização
+            filterCards();
         }
 
-        // ------------------ Funções de Edição ------------------
-
+        // ... (openEditModal, closeEditModal, handleEditSubmit, deleteProcess, filterCards, clearFilters, Form Submit Logic - Mantidos)
+        
         function openEditModal(id) {
             const processo = processos.find(p => p.id === id);
             if (!processo) {
@@ -562,21 +595,15 @@
                 return;
             }
 
-            // Preenche o formulário do modal com os dados do processo
             document.getElementById('edit-id').value = processo.id;
             document.getElementById('edit-nome').value = processo.nome;
             document.getElementById('edit-colaborador').value = processo.colaborador;
             document.getElementById('edit-status').value = processo.status;
             document.getElementById('edit-data-registro').value = processo.dataRegistro;
-            
-            // Preenche a data de previsão (pode ser string vazia)
             document.getElementById('edit-data-previsao').value = processo.dataPrevisao || ''; 
-            // NOVO: Preenche a data de conclusão (pode ser string vazia)
             document.getElementById('edit-data-conclusao').value = processo.dataConclusao || ''; 
-            
             document.getElementById('edit-detalhes').value = processo.detalhes;
 
-            // Mostra o modal
             document.getElementById('edit-modal').classList.remove('hidden');
         }
 
@@ -595,11 +622,9 @@
                 return;
             }
 
-            // Sanitiza os valores (opcionais podem ser string vazia)
             const dataPrevisao = document.getElementById('edit-data-previsao').value.trim();
             const dataConclusao = document.getElementById('edit-data-conclusao').value.trim(); 
 
-            // Atualiza o objeto processo
             processos[index] = {
                 ...processos[index], 
                 colaborador: document.getElementById('edit-colaborador').value,
@@ -618,8 +643,6 @@
         }
 
 
-        // ------------------ Funções de Ação (Excluir) ------------------
-
         function deleteProcess(id) {
             const initialLength = processos.length;
             processos = processos.filter(processo => processo.id !== id);
@@ -633,8 +656,6 @@
             }
         }
 
-        // ------------------ Funções de Filtro ------------------
-        
         function filterCards() {
             const filterColab = document.getElementById('filter-colaborador').value;
             const filterDate = document.getElementById('filter-date').value;
@@ -645,12 +666,10 @@
                 const cardPrevisao = card.getAttribute('data-previsao'); 
                 let matches = true;
 
-                // 1. Filtro por Colaborador
                 if (filterColab !== 'todos' && cardColab !== filterColab) {
                     matches = false;
                 }
 
-                // 2. Filtro por Data (Previsão)
                 if (filterDate && cardPrevisao !== filterDate) {
                     matches = false;
                 }
@@ -664,8 +683,6 @@
             document.getElementById('filter-date').value = '';
             filterCards();
         }
-
-        // ------------------ Manipulação do Formulário (Registro) ------------------
 
         document.getElementById('process-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -689,21 +706,16 @@
             saveProcesses();
             renderDashboard();
             
-            // Limpa campos específicos
             document.getElementById('processo-nome').value = '';
             document.getElementById('data-previsao').value = ''; 
             document.getElementById('data-conclusao').value = ''; 
             document.getElementById('detalhes').value = '';
-            
             document.getElementById('data-registro').value = getTodayDateString(); 
-            
-            console.log(`Processo "${novoProcesso.nome}" adicionado para ${novoProcesso.colaborador}!`);
         });
 
-        // ------------------ Inicialização ------------------
+        // ------------------ Funções de Inicialização (Kanban) ------------------
         
-        // Define alguns dados iniciais se não houver nada salvo no localStorage
-        function setInitialData() {
+        function setInitialKanbanData() {
             if (processos.length === 0) {
                 const today = getTodayDateString();
                 const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]; 
@@ -713,33 +725,225 @@
                 const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
 
                 processos = [
-                    // 1. Em Tratamento (Não Concluído)
                     { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos', dataRegistro: yesterday, dataPrevisao: today, dataConclusao: '', detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta.', id: 1 },
-                    
-                    // 2. Tratados na Semana (A data de conclusão é hoje, então cai na coluna TRATADOS NA SEMANA)
                     { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', dataRegistro: yesterday, dataPrevisao: yesterday, dataConclusao: today, detalhes: 'Migração para novo ambiente AWS concluída com sucesso e documentada.', id: 2 },
-                    
-                    // 3. Histórico de Concluídos (Este é o MAIS RECENTE do histórico - aparecerá primeiro)
                     { colaborador: 'Mariane', status: 'tratados', nome: 'Fechamento Contábil do Mês', dataRegistro: twoDaysAgo, dataPrevisao: lastWeek, dataConclusao: yesterday, detalhes: 'Fechamento finalizado e documentos enviados ao setor financeiro.', id: 6 },
-                    
-                    // 4. Histórico de Concluídos (Este é o MAIS ANTIGO do histórico - aparecerá por último)
                     { colaborador: 'Felipe', status: 'tratados', nome: 'Revisão Contratual Cliente Gama', dataRegistro: lastWeek, dataPrevisao: lastWeek, dataConclusao: twoWeeksAgo, detalhes: 'Contrato revisto e assinado. Processo de arquivamento finalizado.', id: 5 },
-                    
-                    // 5. Próximos Processos (Não Concluído)
                     { colaborador: 'Emily', status: 'proximos', nome: 'Planejamento de Campanha Q4', dataRegistro: today, dataPrevisao: nextWeek, dataConclusao: '', detalhes: 'Definir budget, criar criativos e segmentar público-alvo.', id: 3 },
-                    
-                    // 6. Em Tratamento (Não Concluído)
                     { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', dataRegistro: today, dataPrevisao: '', dataConclusao: '', detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
                 ];
             }
         }
+        
+        // ------------------ Lógica de Acesso e Relatório (Firebase) ------------------
+
+        function openReportModal() {
+            reportModal.classList.remove('hidden');
+            // Se já estiver autenticado, vai direto para o relatório
+            if (isReportAuthenticated) {
+                toggleReportView(true);
+            } else {
+                toggleReportView(false);
+            }
+        }
+
+        function closeReportModal() {
+            reportModal.classList.add('hidden');
+            displayReportMessage('', 'info'); // Limpa mensagens
+        }
+
+        function toggleReportView(loggedIn) {
+            isReportAuthenticated = loggedIn;
+            if (loggedIn) {
+                reportLoginSection.classList.add('hidden');
+                reportDisplaySection.classList.remove('hidden');
+                renderReport();
+            } else {
+                reportDisplaySection.classList.add('hidden');
+                reportLoginSection.classList.remove('hidden');
+                reportUserNameInput.value = '';
+                reportUserPinInput.value = '';
+            }
+        }
+
+        function renderReport() {
+            if (mockProcesses.length === 0) {
+                reportContent.innerHTML = '<p class="text-gray-500 italic text-center mt-8">Nenhum processo simulado encontrado no sistema.</p>';
+                return;
+            }
+
+            // Ordena os processos mockados pela data de entrada (mais recentes primeiro)
+            mockProcesses.sort((a, b) => b.data_entrada.localeCompare(a.data_entrada));
+
+            let html = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Protocolo</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Entrada</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+            `;
+
+            mockProcesses.forEach(p => {
+                const statusColor = p.status === 'Concluído' ? 'bg-green-100 text-green-800' :
+                                    p.status === 'Em Análise' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-blue-100 text-blue-800';
+
+                html += `
+                    <tr>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${p.protocolo}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-600">${p.cliente}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-600">${formatDate(p.data_entrada)}</td>
+                        <td class="px-3 py-2 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">
+                                ${p.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                <p class="text-right text-xs text-gray-400 italic mt-4">Dados simulados. Total de Processos: ${mockProcesses.length}</p>
+            `;
+
+            reportContent.innerHTML = html;
+        }
+
+        function handleReportAuthentication() {
+            const name = reportUserNameInput.value.trim();
+            const pin = reportUserPinInput.value.trim();
+
+            if (!name || !pin) {
+                displayReportMessage("Por favor, preencha o Nome e a Senha (PIN).", 'error');
+                return;
+            }
+            
+            reportLoadingSpinner.classList.remove('hidden');
+            reportButtonText.textContent = 'Verificando...';
+            extractReportButton.disabled = true;
+
+            const user = authorizedUsers.find(u => 
+                u.name.toLowerCase() === name.toLowerCase() && u.pin === pin
+            );
+            
+            setTimeout(() => { 
+                reportLoadingSpinner.classList.add('hidden');
+                reportButtonText.textContent = 'Extrair Relatório';
+                extractReportButton.disabled = false;
+
+                if (user) {
+                    displayReportMessage(`Acesso concedido. Bem-vinda, ${user.name}!`, 'success');
+                    toggleReportView(true);
+                } else {
+                    displayReportMessage("Nome ou Senha (PIN) incorretos. Acesso negado.", 'error');
+                }
+            }, 800);
+        }
+        
+        function handleReportLogout() {
+             displayReportMessage("Sessão encerrada. Relatório bloqueado.", 'info');
+             toggleReportView(false);
+        }
+
+        // ------------------ Funções de Inicialização (Firebase) ------------------
+
+        async function initializeFirebase() {
+            if (!firebaseConfig.apiKey) {
+                 console.error("Firebase Configuração Inválida. Apenas o Kanban funcionará.");
+                 extractReportButton.disabled = false;
+                 reportButtonText.textContent = 'Extrair Relatório';
+                 return;
+            }
+
+            try {
+                // setLogLevel('debug');
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                setupReportDataListener();
+                
+            } catch (error) {
+                console.error("Erro ao inicializar Firebase:", error);
+                displayReportMessage(`Falha ao conectar ao sistema de segurança.`, 'error');
+            }
+        }
+
+        function setupReportDataListener() {
+            // Caminho: /artifacts/{appId}/public/data/authorized_users/config
+            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'authorized_users', 'config');
+
+            const initialConfig = {
+                // Usuários autorizados: Dra. Cássia e Dra. Janaína
+                users: [
+                    { name: 'Dra. Cássia', pin: '1234' },
+                    { name: 'Dra. Janaína', pin: '5678' }
+                ],
+                // Dados simulados para o relatório
+                mock_processes: [
+                    { id: 1, protocolo: '2024/00123', cliente: 'Empresa Alfa', status: 'Em Análise', data_entrada: '2024-10-01' },
+                    { id: 2, protocolo: '2024/00124', cliente: 'Cliente Beta', status: 'Em Andamento', data_entrada: '2024-10-02' },
+                    { id: 3, protocolo: '2024/00125', cliente: 'Indústria Gamma', status: 'Concluído', data_entrada: '2024-10-05' },
+                    { id: 4, protocolo: '2024/00126', cliente: 'Startup Delta', status: 'Em Análise', data_entrada: '2024-10-08' },
+                    { id: 5, protocolo: '2024/00127', cliente: 'Comércio Epsilon', status: 'Concluído', data_entrada: '2024-10-10' },
+                    { id: 6, protocolo: '2024/00128', cliente: 'Serviços Zeta', status: 'Em Andamento', data_entrada: '2024-10-12' },
+                    { id: 7, protocolo: '2024/00129', cliente: 'Construtora Lambda', status: 'Em Andamento', data_entrada: '2024-10-15' },
+                    { id: 8, protocolo: '2024/00130', cliente: 'Escritório Omega', status: 'Concluído', data_entrada: '2024-10-14' },
+                ]
+            };
+
+            // Garante que o documento exista no Firestore
+            setDoc(configRef, initialConfig, { merge: true })
+                .catch(err => console.error("Erro ao garantir dados iniciais de configuração:", err));
+
+            // Listener para monitorar a lista de usuários e processos
+            onSnapshot(configRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    authorizedUsers = data.users || [];
+                    mockProcesses = data.mock_processes || [];
+                    
+                    extractReportButton.disabled = false;
+                    reportButtonText.textContent = 'Extrair Relatório';
+                } else {
+                    authorizedUsers = initialConfig.users;
+                    mockProcesses = initialConfig.mock_processes;
+                }
+            }, (error) => {
+                console.error("Erro no listener de dados do Relatório:", error);
+            });
+        }
 
 
+        // Event Listeners (Relatório)
+        extractReportButton.addEventListener('click', handleReportAuthentication);
+        reportUserPinInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !extractReportButton.disabled) {
+                handleReportAuthentication();
+            }
+        });
+
+
+        // Inicialização Principal
         document.addEventListener('DOMContentLoaded', () => {
             setupCollaboratorSelects(); 
             loadProcesses(); 
-            setInitialData(); 
+            setInitialKanbanData(); 
             renderDashboard(); 
+            initializeFirebase(); // Inicializa o Firebase para a função de relatório
         });
 
     </script>
