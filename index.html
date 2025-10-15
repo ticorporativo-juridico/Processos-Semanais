@@ -214,7 +214,7 @@
             </div>
             <div class="col-span-full md:col-span-2">
                 <label for="data-conclusao" class="block text-sm font-extrabold text-emerald-700">⭐ Data de Conclusão (Opcional, se JÁ feito)</label>
-                <input type="date" id="data-conclusao" class="mt-1 block w-full p-3 border-2 border-emerald-300 rounded-lg shadow-md focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 bg-emerald-50">
+                <input type="date" id="data-conclusao" class="mt-1 block w-full p-3 border-2 border-emerald-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 bg-emerald-50">
             </div>
             <div class="col-span-full">
                 <label for="processo-nome" class="block text-sm font-semibold text-gray-700">Nome do Processo/Tarefa</label>
@@ -304,17 +304,30 @@
                 <!-- Estado: Login (Inicial) -->
                 <div id="report-login-section" class="space-y-6 text-center">
                     <h2 class="text-2xl font-black text-gray-700 border-b pb-2">Acesso Exclusivo ao Relatório</h2>
-                    <p class="text-sm text-gray-500">Insira suas credenciais de acesso restrito.</p>
+                    <p class="text-sm text-gray-500">Insira suas credenciais de acesso restrito. Use o 👁️ para verificar se a senha está correta.</p>
 
                     <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                         <input type="text" id="report-user-name" placeholder="Nome (Ex: Cássia ou Dra. Cássia)"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
                                autocomplete="username">
-                        <!-- PIN de 6 caracteres, placeholder atualizado para sugerir o formato -->
-                        <input type="password" id="report-user-pin" placeholder="PIN Secreto (6 Caracteres)"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
-                               autocomplete="current-password"
-                               maxlength="6"> 
+                        
+                        <!-- NOVO WRAPPER PARA TOGGLE DE PIN -->
+                        <div class="relative w-full">
+                            <input type="password" id="report-user-pin" placeholder="PIN Secreto (6 Caracteres)"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150 pr-10"
+                                   autocomplete="current-password"
+                                   maxlength="6">
+                            <button type="button" id="toggle-pin-visibility" 
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" 
+                                    onclick="togglePinVisibility()">
+                                <!-- Ícone de Olho Fechado (Padrão) -->
+                                <svg id="eye-closed-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.057 10.057 0 0112 19c-4.478 0-8.268-2.943-9.544-7 1.276-4.057 5.066-7 9.544-7a9.954 9.954 0 011.875.175M16 12a4 4 0 11-8 0 4 4 0 018 0zM17 19l-4-4"></path></svg>
+                                <!-- Ícone de Olho Aberto (Escondido) -->
+                                <svg id="eye-open-icon" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </button>
+                        </div>
+                        <!-- FIM DO NOVO WRAPPER -->
+
                     </div>
 
                     <button id="extract-report-button"
@@ -366,7 +379,7 @@
         let db, auth;
         
         // ====================================================================
-        // LISTA COMPLETA DE COLABORADORES (CONFORME SOLICITADO)
+        // LISTA COMPLETA DE COLABORADORES
         // ====================================================================
         const colaboradores = [
             'Beatriz', 'Diego', 'Emily', 'Felipe', 'Hosana', 
@@ -375,8 +388,16 @@
         // Variável que armazena todos os processos do Kanban (Dados Locais/localStorage)
         let processos = []; 
 
+        // Constante para definir os usuários autorizados (Fallback e Inicial)
+        const initialAuthorizedUsers = [
+            // PINs: 1234$C e 5678$J
+            { name: 'Dra. Cássia', pin: '1234$C' }, 
+            { name: 'Dra. Janaína', pin: '5678$J' }
+        ];
+
         // Dados do Relatório (Firebase - Apenas Credenciais)
-        let authorizedUsers = [];
+        // Inicializa com a lista padrão para garantir que as credenciais existam
+        let authorizedUsers = [...initialAuthorizedUsers]; 
         let isReportAuthenticated = false;
 
         // Elementos UI do Relatório
@@ -439,6 +460,26 @@
                 reportMessageArea.classList.add('hidden');
             }, 5000);
         }
+
+        /**
+         * NOVO: Alterna a visibilidade do campo PIN no modal de relatório.
+         */
+        function togglePinVisibility() {
+            const pinInput = document.getElementById('report-user-pin');
+            const eyeOpen = document.getElementById('eye-open-icon');
+            const eyeClosed = document.getElementById('eye-closed-icon');
+
+            if (pinInput.type === 'password') {
+                pinInput.type = 'text';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            } else {
+                pinInput.type = 'password';
+                eyeClosed.classList.remove('hidden');
+                eyeOpen.classList.add('hidden');
+            }
+        }
+
 
         // ------------------ Funções de Persistência Kanban (localStorage) ------------------
 
@@ -925,6 +966,7 @@
 
             const normalizedInputName = normalizeName(name);
 
+            // Usa a lista global atualizada pelo listener (ou a lista padrão se o listener ainda não rodou)
             const user = authorizedUsers.find(u => {
                 const normalizedStoredName = normalizeName(u.name);
                 // Compara o nome normalizado E o PIN EXATO (case-sensitive)
@@ -941,7 +983,7 @@
                     displayReportMessage(`Acesso concedido. Bem-vinda, ${user.name}!`, 'success');
                     toggleReportView(true); // Se autenticado, chama toggleReportView(true)
                 } else {
-                    displayReportMessage("Nome ou Senha (PIN) incorretos. Acesso negado.", 'error');
+                    displayReportMessage("Nome ou Senha (PIN) incorretos. Acesso negado. Use o 'olho' para verificar a senha.", 'error');
                 }
             }, 800);
         }
@@ -1039,12 +1081,8 @@
             const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'authorized_users', 'config');
 
             const initialConfig = {
-                // Usuários autorizados: Dra. Cássia e Dra. Janaína (credenciais para o Modal de Relatório)
-                users: [
-                    // PINs: 1234$C e 5678$J
-                    { name: 'Dra. Cássia', pin: '1234$C' }, 
-                    { name: 'Dra. Janaína', pin: '5678$J' }
-                ],
+                // Usa a constante global para os dados iniciais
+                users: initialAuthorizedUsers,
             };
 
             // Garante que o documento exista no Firestore
@@ -1055,16 +1093,19 @@
             onSnapshot(configRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    authorizedUsers = data.users || [];
+                    // Atualiza a lista global com os dados do Firestore
+                    authorizedUsers = data.users || initialAuthorizedUsers;
                     
                     extractReportButton.disabled = false;
                     reportButtonText.textContent = 'Extrair Relatório';
                 } else {
-                    // Usa os dados default se não houver no Firestore
-                    authorizedUsers = initialConfig.users;
+                    // Se o documento não existe, usa os dados default
+                    authorizedUsers = initialAuthorizedUsers;
                 }
             }, (error) => {
                 console.error("Erro no listener de dados de Usuários:", error);
+                // Em caso de erro, garante que a lista default ainda esteja disponível
+                authorizedUsers = initialAuthorizedUsers;
             });
         }
 
@@ -1099,7 +1140,8 @@
         window.openReportModal = openReportModal;
         window.closeReportModal = closeReportModal;
         window.handleReportLogout = handleReportLogout;
-        window.downloadReportAsCsv = downloadReportAsCsv; // NOVO: Expondo função de download
+        window.downloadReportAsCsv = downloadReportAsCsv; 
+        window.togglePinVisibility = togglePinVisibility; // NOVO: Função para o toggle de PIN
 
     </script>
 </body>
