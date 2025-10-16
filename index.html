@@ -103,6 +103,19 @@
         /* Classes de relatório */
         .text-report { color: var(--color-report-primary); }
         .focus-report { border-color: var(--color-report-primary); box-shadow: 0 0 0 1px var(--color-report-primary); }
+
+        /* NOVO: Keyframes para a animação de piscar em vermelho */
+        @keyframes flash-alert {
+            0%, 100% { background-color: #fef2f2; border-color: #f87171; } /* Vermelho muito claro/base */
+            50% { background-color: #fee2e2; border-color: #ef4444; } /* Vermelho mais forte */
+        }
+        
+        /* NOVO: Classe para aplicar o alerta de prazo iminente */
+        .alert-iminent {
+            animation: flash-alert 1.5s infinite ease-in-out;
+            border-left-color: #ef4444 !important; /* Força a cor do lado esquerdo para vermelho de alerta */
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2), 0 2px 4px -2px rgba(239, 68, 68, 0.1);
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -323,7 +336,7 @@
                                 <!-- Ícone de Olho Fechado (Padrão) -->
                                 <svg id="eye-closed-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.057 10.057 0 0112 19c-4.478 0-8.268-2.943-9.544-7 1.276-4.057 5.066-7 9.544-7a9.954 9.954 0 011.875.175M16 12a4 4 0 11-8 0 4 4 0 018 0zM17 19l-4-4"></path></svg>
                                 <!-- Ícone de Olho Aberto (Escondido) -->
-                                <svg id="eye-open-icon" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <svg id="eye-open-icon" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                             </button>
                         </div>
                         <!-- FIM DO NOVO WRAPPER -->
@@ -397,8 +410,7 @@
             { name: 'Janaína', pin: '5678$J' } // Adiciona a variação sem prefixo
         ];
 
-        // Dados do Relatório (Firebase - Apenas Credenciais)
-        // Inicializa com a lista padrão para garantir que as credenciais existam
+        // Variável de controle do Firebase e Autenticação
         let authorizedUsers = [...initialAuthorizedUsers]; 
         let isReportAuthenticated = false;
 
@@ -418,6 +430,32 @@
 
         function getTodayDateString() {
             return new Date().toISOString().split('T')[0];
+        }
+
+        /**
+         * NOVO: Verifica se a data de previsão está a 1 dia de hoje (ou já está atrasada)
+         * e o processo não foi concluído.
+         * @param {string} dateString - Data de previsão (YYYY-MM-DD).
+         * @param {string} conclusionDateString - Data de conclusão (YYYY-MM-DD).
+         * @returns {boolean} True se o prazo estiver iminente/atrasado e o processo pendente.
+         */
+        function isDueSoon(dateString, conclusionDateString) {
+            if (!dateString || conclusionDateString) return false;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+
+            const targetDate = new Date(dateString + 'T00:00:00');
+            targetDate.setHours(0, 0, 0, 0);
+
+            // Diferença em milissegundos
+            const diffTime = targetDate.getTime() - today.getTime();
+            // Diferença em dias (arredondado para garantir que 1 dia seja 1 ou 0)
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+            // Se for hoje (0 dias) ou no dia seguinte (1 dia) ou já estiver atrasado (< 0)
+            // No entanto, vamos focar em: <= 1 dia (amanhã, hoje ou atrasado)
+            return diffDays <= 1; 
         }
 
         function isWithinCurrentWeek(dateString) {
@@ -464,7 +502,7 @@
         }
 
         /**
-         * NOVO: Alterna a visibilidade do campo PIN no modal de relatório.
+         * Alterna a visibilidade do campo PIN no modal de relatório.
          */
         function togglePinVisibility() {
             const pinInput = document.getElementById('report-user-pin');
@@ -555,8 +593,12 @@
             // Define a classe de status visual baseada na data de conclusão ou status do Kanban
             statusClass = isWithinCurrentWeek(processo.dataConclusao) ? 'tratados' : (processo.dataConclusao ? 'concluido-hist' : (processo.status === 'proximos' ? 'proximos' : 'tratamento'));
 
+            // NOVO: Verifica se o processo está em alerta de prazo
+            const isAlert = isDueSoon(processo.dataPrevisao, processo.dataConclusao);
+            
             const card = document.createElement('div');
-            card.className = `task-card bg-white p-4 rounded-xl shadow-lg mb-4 text-sm status-${statusClass}`;
+            // ADICIONA a classe alert-iminent se isAlert for true
+            card.className = `task-card bg-white p-4 rounded-xl shadow-lg mb-4 text-sm status-${statusClass} ${isAlert ? 'alert-iminent' : ''}`;
             
             card.setAttribute('data-colaborador', processo.colaborador);
             card.setAttribute('data-previsao', processo.dataPrevisao || '');
@@ -570,6 +612,17 @@
             if (conclusaoDisplay) {
                 const conclusaoText = isWithinCurrentWeek(processo.dataConclusao) ? 'Concluído Esta Semana' : 'Concluído em Histórico';
                 conclusaoHtml = `<span class="card-done text-xs" title="${conclusaoText}">✅ ${conclusaoDisplay}</span>`;
+            }
+
+            // NOVO: Bloco de alerta de prazo
+            let alertHtml = '';
+            if (isAlert) {
+                const isLate = new Date(processo.dataPrevisao) < new Date(getTodayDateString());
+                alertHtml = `
+                    <div class="p-2 mt-2 mb-2 rounded-lg bg-red-100 text-red-700 font-bold text-center border-2 border-red-500 shadow-inner">
+                        <span class="mr-1">🔔</span> ATENÇÃO: ${isLate ? 'PRAZO ATRASADO!' : 'Prazo Iminente!'}
+                    </div>
+                `;
             }
 
             card.innerHTML = `
@@ -587,6 +640,8 @@
                     </div>
                 </div>
                 
+                ${alertHtml} <!-- Insere o alerta aqui -->
+
                 <div class="flex justify-between items-center mb-2">
                     <div class="text-xs text-gray-500">Colab: <span class="font-bold text-gray-700">${processo.colaborador}</span></div>
                     <span class="card-date text-xs" title="Previsão de Conclusão">Prev.: ${previsaoDisplay}</span>
@@ -795,18 +850,26 @@
         function setInitialKanbanData() {
             if (processos.length === 0) {
                 const today = getTodayDateString();
-                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]; 
-                const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0]; 
-                const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
-                const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-                const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
+                const todayObj = new Date(today + 'T00:00:00');
+                const yesterday = new Date(todayObj.getTime() - 86400000).toISOString().split('T')[0]; // Previsão para HOJE (Atrasado se não concluído)
+                const tomorrow = new Date(todayObj.getTime() + 86400000).toISOString().split('T')[0]; // Previsão para AMANHÃ (Alerta de iminente)
+                const twoDaysAgo = new Date(todayObj.getTime() - 2 * 86400000).toISOString().split('T')[0]; 
+                const nextWeek = new Date(todayObj.getTime() + 7 * 86400000).toISOString().split('T')[0];
+                const lastWeek = new Date(todayObj.getTime() - 7 * 86400000).toISOString().split('T')[0];
+                const twoWeeksAgo = new Date(todayObj.getTime() - 14 * 86400000).toISOString().split('T')[0];
 
                 processos = [
-                    { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos', dataRegistro: yesterday, dataPrevisao: today, dataConclusao: '', detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta.', id: 1 },
+                    // ATRASADO (Alerta)
+                    { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos (Atrasado)', dataRegistro: twoDaysAgo, dataPrevisao: yesterday, dataConclusao: '', detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta. **ATRASADO**', id: 1 },
+                    // CONCLUÍDO (Sem Alerta)
                     { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', dataRegistro: twoDaysAgo, dataPrevisao: yesterday, dataConclusao: today, detalhes: 'Migração para novo ambiente AWS concluída com sucesso e documentada.', id: 2 },
+                    // PRÓXIMO (Alerta)
+                    { colaborador: 'Emily', status: 'tratamento', nome: 'Planejamento de Campanha Q4 (Iminente)', dataRegistro: today, dataPrevisao: tomorrow, dataConclusao: '', detalhes: 'Definir budget, criar criativos e segmentar público-alvo. **PRAZO AMANHÃ**', id: 3 },
+                    // LONGE (Sem Alerta)
+                    { colaborador: 'Felipe', status: 'proximos', nome: 'Revisão Contratual Cliente Gama (Próximo Mês)', dataRegistro: lastWeek, dataPrevisao: nextWeek, dataConclusao: '', detalhes: 'Contrato revisto e assinado. Processo de arquivamento finalizado.', id: 5 },
+                    // CONCLUÍDO HISTÓRICO (Sem Alerta)
                     { colaborador: 'Mariane', status: 'tratados', nome: 'Fechamento Contábil do Mês', dataRegistro: twoDaysAgo, dataPrevisao: lastWeek, dataConclusao: twoDaysAgo, detalhes: 'Fechamento finalizado e documentos enviados ao setor financeiro.', id: 6 },
-                    { colaborador: 'Felipe', status: 'tratados', nome: 'Revisão Contratual Cliente Gama', dataRegistro: lastWeek, dataPrevisao: lastWeek, dataConclusao: twoWeeksAgo, detalhes: 'Contrato revisto e assinado. Processo de arquivamento finalizado.', id: 5 },
-                    { colaborador: 'Emily', status: 'proximos', nome: 'Planejamento de Campanha Q4', dataRegistro: today, dataPrevisao: nextWeek, dataConclusao: '', detalhes: 'Definir budget, criar criativos e segmentar público-alvo.', id: 3 },
+                    // SEM PREVISÃO (Sem Alerta)
                     { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', dataRegistro: today, dataPrevisao: '', dataConclusao: '', detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
                     { colaborador: 'Hosana', status: 'tratamento', nome: 'Configuração de VPN para Cliente Z', dataRegistro: twoDaysAgo, dataPrevisao: today, dataConclusao: '', detalhes: 'Problema de conectividade intermitente a ser resolvido. Testes pendentes.', id: 7 },
                     { colaborador: 'Rebeca', status: 'proximos', nome: 'Auditoria de Processos Internos', dataRegistro: today, dataPrevisao: nextWeek, dataConclusao: '', detalhes: 'Preparar documentação para auditoria do próximo mês. Prioridade média.', id: 8 },
@@ -849,7 +912,7 @@
             }
         }
 
-        // NOVO: Renderiza o relatório com base nos dados ATUAIS do Kanban
+        // Renderiza o relatório com base nos dados ATUAIS do Kanban
         function renderReport() {
             // 1. Usa a lista global 'processos'
             if (processos.length === 0) {
@@ -996,7 +1059,7 @@
         }
 
         /**
-         * NOVO: Converte os dados do Kanban em CSV e inicia o download.
+         * Converte os dados do Kanban em CSV e inicia o download.
          */
         function downloadReportAsCsv() {
             if (processos.length === 0) {
@@ -1143,8 +1206,9 @@
         window.closeReportModal = closeReportModal;
         window.handleReportLogout = handleReportLogout;
         window.downloadReportAsCsv = downloadReportAsCsv; 
-        window.togglePinVisibility = togglePinVisibility; // NOVO: Função para o toggle de PIN
-
+        window.togglePinVisibility = togglePinVisibility; 
+        window.isDueSoon = isDueSoon; // Expõe a nova função de utilidade
+        
     </script>
 </body>
 </html>
