@@ -102,30 +102,7 @@
 
         /* Classes de relatório */
         .text-report { color: var(--color-report-primary); }
-        .focus-report { border-color: var(--color-report-primary) !important; box-shadow: 0 0 0 1px var(--color-report-primary) !important; }
-        
-        /* ============================================== */
-        /* NOVO: Efeito de Piscar Alerta (Blinking Alert Effect) */
-        /* ============================================== */
-        @keyframes blink-red {
-            0%, 100% {
-                /* Sombra e Borda: Vermelho Intenso */
-                box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.7); 
-                border-color: #ef4444; 
-                background-color: #fef2f2; /* Fundo levemente vermelho */
-            }
-            50% {
-                /* Sombra e Borda: Transparente/Suave */
-                box-shadow: 0 0 0 0px rgba(239, 68, 68, 0);
-                border-color: #fca5a5; 
-                background-color: #fff;
-            }
-        }
-
-        .alert-blink {
-            animation: blink-red 1s infinite;
-            border-left-color: #ef4444 !important; /* Força a borda esquerda vermelha */
-        }
+        .focus-report { border-color: var(--color-report-primary); box-shadow: 0 0 0 1px var(--color-report-primary); }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -331,15 +308,15 @@
 
                     <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                         <input type="text" id="report-user-name" placeholder="Nome (Ex: Cássia ou Dra. Cássia)"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
-                                autocomplete="username">
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150"
+                               autocomplete="username">
                         
                         <!-- NOVO WRAPPER PARA TOGGLE DE PIN -->
                         <div class="relative w-full">
                             <input type="password" id="report-user-pin" placeholder="PIN Secreto (6 Caracteres)"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150 pr-10"
-                                    autocomplete="current-password"
-                                    maxlength="6">
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus-report focus:border-report-primary transition duration-150 pr-10"
+                                   autocomplete="current-password"
+                                   maxlength="6">
                             <button type="button" id="toggle-pin-visibility" 
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" 
                                     onclick="togglePinVisibility()">
@@ -353,8 +330,8 @@
 
                     </div>
 
-                    <button id="extract-report-button" onclick="handleReportAuthentication(event)"
-                            class="mx-auto bg-emerald-600 text-white py-3 px-6 rounded-xl font-bold text-lg hover:bg-emerald-700 transition duration-200 shadow-md shadow-emerald-300/50 flex items-center justify-center max-w-md w-full">
+                    <button id="extract-report-button"
+                            class="mx-auto bg-emerald-600 text-white py-3 px-6 rounded-xl font-bold text-lg hover:bg-emerald-700 transition duration-200 shadow-md shadow-emerald-300/50 flex items-center justify-center max-w-md">
                         <span id="report-button-text">Extrair Relatório</span>
                         <svg id="report-loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -386,16 +363,13 @@
     </div>
 
 
-    <!-- LÓGICA JAVASCRIPT E FIREBASE (COMPLETA) -->
+    <!-- LÓGICA JAVASCRIPT E FIREBASE -->
     <script type="module">
         // Importa as bibliotecas do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, collection, updateDoc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        
-        // Ativa o log para debug do Firestore
-        // setLogLevel('debug');
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
 
         // Variáveis Globais do Ambiente (MANDATÓRIO USAR)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -403,10 +377,6 @@
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let db, auth;
-        let userId = 'anon-user';
-        let processesRef; // Referência da Coleção de Processos
-        let reportCredsRef; // Referência do Documento de Credenciais
-        let isAuthReady = false;
         
         // ====================================================================
         // LISTA COMPLETA DE COLABORADORES
@@ -415,17 +385,18 @@
             'Beatriz', 'Diego', 'Emily', 'Felipe', 'Hosana', 
             'João', 'Mariane', 'Rebeca', 'Tairane', 'Thais'
         ];
-        // Variável que armazena todos os processos
+        // Variável que armazena todos os processos do Kanban (Dados Locais/localStorage)
         let processos = []; 
 
         // Constante para definir os usuários autorizados (Fallback e Inicial)
-        // **IMPORTANTE**: As credenciais reais serão lidas do Firestore.
         const initialAuthorizedUsers = [
             // PINs: 1234$C e 5678$J
             { name: 'Dra. Cássia', pin: '1234$C' }, 
             { name: 'Dra. Janaína', pin: '5678$J' }
         ];
 
+        // Dados do Relatório (Firebase - Apenas Credenciais)
+        // Inicializa com a lista padrão para garantir que as credenciais existam
         let authorizedUsers = [...initialAuthorizedUsers]; 
         let isReportAuthenticated = false;
 
@@ -441,176 +412,11 @@
         const reportButtonText = document.getElementById('report-button-text');
         const reportLoadingSpinner = document.getElementById('report-loading-spinner');
 
-        // ====================================================================
-        // 1. FIREBASE SETUP & AUTHENTICATION
-        // ====================================================================
-
-        async function initializeFirebase() {
-            try {
-                // Inicializa o Firebase (se ainda não estiver inicializado)
-                try {
-                    // Tenta obter a instância existente para evitar re-inicialização
-                    getApp(); 
-                } catch (e) {
-                    initializeApp(firebaseConfig);
-                }
-                
-                auth = getAuth();
-                db = getFirestore();
-
-                // 1. Autenticação: prioriza o token customizado
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                
-                userId = auth.currentUser?.uid || crypto.randomUUID();
-                
-                // 2. Define os caminhos de persistência (Coleção Pública)
-                processesRef = collection(db, 'artifacts', appId, 'public', 'data', 'processes');
-                reportCredsRef = doc(db, 'artifacts', appId, 'public', 'data', 'report_credentials', 'authorized_list');
-
-                // 3. Inicializa listeners para dados (incluindo credenciais do relatório)
-                subscribeToReportCredentials();
-                subscribeToProcesses();
-                
-                isAuthReady = true;
-                console.log(`Firebase Inicializado. UserId: ${userId}`);
-
-            } catch (error) {
-                console.error("Erro na inicialização do Firebase:", error);
-            }
-        }
-
-        // ====================================================================
-        // 2. CORE FIRESTORE LISTENERS
-        // ====================================================================
-
-        /**
-         * Listener para os processos do Kanban.
-         */
-        function subscribeToProcesses() {
-            if (!processesRef) return;
-
-            onSnapshot(processesRef, (snapshot) => {
-                const fetchedProcesses = [];
-                snapshot.forEach(doc => {
-                    // Mapeia o documento e adiciona o ID como campo.
-                    fetchedProcesses.push({ 
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
-                // Garante que o array principal seja atualizado e o Kanban renderizado.
-                processos = fetchedProcesses.sort((a, b) => new Date(a.dataRegistro) - new Date(b.dataRegistro));
-                renderKanban();
-            }, (error) => {
-                console.error("Erro ao receber updates de processos:", error);
-            });
-        }
-        
-        /**
-         * Listener para as credenciais de acesso ao relatório.
-         */
-        function subscribeToReportCredentials() {
-            if (!reportCredsRef) return;
-
-            onSnapshot(reportCredsRef, (docSnap) => {
-                if (docSnap.exists() && docSnap.data().users) {
-                    authorizedUsers = docSnap.data().users;
-                    console.log("Credenciais de relatório atualizadas via Firestore.");
-                } else {
-                    // Se o documento não existir, o cria com os valores iniciais.
-                    setDoc(reportCredsRef, { users: initialAuthorizedUsers }, { merge: true })
-                        .then(() => console.log("Documento de credenciais inicializado."))
-                        .catch(e => console.error("Erro ao inicializar credenciais:", e));
-                }
-            }, (error) => {
-                console.error("Erro ao receber updates de credenciais:", error);
-                authorizedUsers = initialAuthorizedUsers; // Usa fallback em caso de erro
-            });
-        }
-        
-        // ====================================================================
-        // 3. CORE CRUD FUNCTIONS (Firestore)
-        // ====================================================================
-
-        /**
-         * Adiciona um novo processo ou o inicializa se não tiver ID.
-         */
-        async function addOrUpdateProcess(data, id = null) {
-            if (!isAuthReady) {
-                console.error("Firebase não está pronto para operações de escrita.");
-                return;
-            }
-            try {
-                if (id) {
-                    // Atualiza o documento existente
-                    const processDocRef = doc(db, processesRef.path, id);
-                    await updateDoc(processDocRef, data);
-                    console.log(`Processo ID: ${id} atualizado com sucesso.`);
-                } else {
-                    // Cria um novo documento (o Firestore gera o ID automaticamente)
-                    const newDocRef = doc(processesRef);
-                    await setDoc(newDocRef, { ...data, id: newDocRef.id });
-                    console.log(`Novo processo adicionado com ID: ${newDocRef.id}`);
-                }
-            } catch (e) {
-                console.error(`Erro ao salvar/atualizar processo (ID: ${id}):`, e);
-            }
-        }
-        
-        /**
-         * Exclui um processo.
-         */
-        async function deleteProcess(id) {
-            if (!isAuthReady || !id) {
-                console.error("Firebase não está pronto ou ID ausente.");
-                return;
-            }
-            
-            // Substitui o alert/confirm com uma lógica de UI (aqui usamos console.log para simplificar, mas em prod seria um modal)
-            if (window.confirm(`Tem certeza que deseja DELETAR o processo ID: ${id}?`)) {
-                 try {
-                    const processDocRef = doc(db, processesRef.path, id);
-                    await deleteDoc(processDocRef);
-                    console.log(`Processo ID: ${id} deletado com sucesso.`);
-                } catch (e) {
-                    console.error("Erro ao deletar processo:", e);
-                }
-            }
-        }
-
-        // ====================================================================
-        // 4. UI UTILITIES AND RENDERING
-        // ====================================================================
+        // ------------------ Funções de Utilitário Comuns ------------------
 
         function getTodayDateString() {
             return new Date().toISOString().split('T')[0];
         }
-        
-        /**
-         * NOVO: Verifica se a data de previsão está a exatamente um dia (amanhã).
-         */
-        function isOneDayFromDue(previsaoDateString) {
-            if (!previsaoDateString) return false;
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Início de hoje
-
-            const previsionDate = new Date(previsaoDateString + 'T00:00:00');
-            previsionDate.setHours(0, 0, 0, 0); // Início do dia da previsão
-
-            // Calcula a diferença em dias (arredonda para cima)
-            const diffTime = previsionDate.getTime() - today.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-
-            // O processo está a um dia da conclusão se a diferença for exatamente 1
-            // e maior que zero (ou seja, amanhã é o prazo)
-            return diffDays === 1;
-        }
-
 
         function isWithinCurrentWeek(dateString) {
             if (!dateString) return false;
@@ -619,10 +425,8 @@
             today.setHours(0, 0, 0, 0); 
             const oneDay = 1000 * 60 * 60 * 24;
             const dayOfWeek = today.getDay(); 
-            // Calcula o início da semana (Domingo)
             const startOfWeek = new Date(today.getTime() - dayOfWeek * oneDay); 
-            // Calcula o fim da semana (Sábado)
-            const endOfWeek = new Date(startOfWeek.getTime() + 6 * oneDay); 
+            const endOfWeek = new Date(startOfWeek.getTime() + 6 * oneDay);    
             endOfWeek.setHours(23, 59, 59, 999);
             return targetDate >= startOfWeek && targetDate <= endOfWeek;
         }
@@ -657,6 +461,9 @@
             }, 5000);
         }
 
+        /**
+         * NOVO: Alterna a visibilidade do campo PIN no modal de relatório.
+         */
         function togglePinVisibility() {
             const pinInput = document.getElementById('report-user-pin');
             const eyeOpen = document.getElementById('eye-open-icon');
@@ -674,17 +481,52 @@
         }
 
 
+        // ------------------ Funções de Persistência Kanban (localStorage) ------------------
+
+        function saveProcesses() {
+            try {
+                localStorage.setItem('processosDashboard', JSON.stringify(processos));
+            } catch (e) {
+                console.error("Erro ao salvar dados Kanban:", e);
+            }
+        }
+
+        function loadProcesses() {
+            try {
+                const storedProcesses = localStorage.getItem('processosDashboard');
+                if (storedProcesses) {
+                    const loaded = JSON.parse(storedProcesses);
+                    // Garante que todos os campos de data necessários existam ao carregar
+                    processos = loaded.map(p => ({
+                        dataRegistro: p.dataRegistro || getTodayDateString(), 
+                        dataPrevisao: p.dataPrevisao || '', 
+                        dataConclusao: p.dataConclusao || '', 
+                        ...p,
+                    }));
+                }
+            } catch (e) {
+                console.error("Erro ao carregar dados Kanban:", e);
+                processos = [];
+            }
+        }
+        
+        // ------------------ Funções de UI Kanban ------------------
+
         function setupCollaboratorSelects() {
+            // Lógica de preenchimento dos selects com os nomes dos colaboradores
             const filterSelect = document.getElementById('filter-colaborador');
             const newSelect = document.getElementById('colaborador');
             const editSelect = document.getElementById('edit-colaborador');
             
+            // Reúne todos os selects para iterar, ignorando nulos (embora não deva ocorrer)
             const selectsToPopulate = [filterSelect, newSelect, editSelect].filter(s => s !== null);
 
+            // Preenche a data de registro padrão
             if (document.getElementById('data-registro')) {
                 document.getElementById('data-registro').value = getTodayDateString();
             }
 
+            // Garante que os selects de Novo Processo e Edição estejam limpos antes de preencher
             [newSelect, editSelect].forEach(select => {
                 if (select) select.innerHTML = '';
             });
@@ -695,166 +537,143 @@
                 option.value = nome;
                 option.textContent = nome;
 
+                // Anexa a opção a cada um dos selects.
                 selectsToPopulate.forEach(select => {
+                    // O filtro já tem a opção "Todos", então clonamos a opção do colaborador
                     select.appendChild(option.cloneNode(true));
                 });
             });
+            
+            console.log("Campos de colaborador preenchidos com sucesso.");
         }
 
         function createCard(processo) {
-            const isDone = processo.dataConclusao;
-            
-            // 1. Lógica de Alerta de Prazo
-            const isDueTomorrow = !isDone && processo.dataPrevisao && isOneDayFromDue(processo.dataPrevisao);
-            
-            // 2. Define a classe de status visual baseada na data de conclusão ou status do Kanban
+            // Lógica de criação do Card Kanban
             let statusClass;
-            // Se concluído na semana atual, status é 'tratados' (verde)
-            if (isWithinCurrentWeek(processo.dataConclusao)) {
-                statusClass = 'tratados';
-            } 
-            // Se concluído, mas em outra semana, status é 'concluido-hist' (cinza)
-            else if (isDone) {
-                statusClass = 'concluido-hist';
-            } 
-            // Caso contrário, usa o status do Kanban (tratamento ou proximos)
-            else {
-                statusClass = processo.status === 'proximos' ? 'proximos' : 'tratamento';
-            }
-
-            // 3. Adiciona a classe de blink se o alerta for verdadeiro
-            let cardClasses = `task-card bg-white p-4 rounded-xl shadow-lg mb-4 text-sm status-${statusClass} transition duration-300`;
-            if (isDueTomorrow) {
-                cardClasses += ' alert-blink';
-            }
+            // Define a classe de status visual baseada na data de conclusão ou status do Kanban
+            statusClass = isWithinCurrentWeek(processo.dataConclusao) ? 'tratados' : (processo.dataConclusao ? 'concluido-hist' : (processo.status === 'proximos' ? 'proximos' : 'tratamento'));
 
             const card = document.createElement('div');
-            card.className = cardClasses;
-            card.setAttribute('data-id', processo.id);
+            card.className = `task-card bg-white p-4 rounded-xl shadow-lg mb-4 text-sm status-${statusClass}`;
+            
             card.setAttribute('data-colaborador', processo.colaborador);
             card.setAttribute('data-previsao', processo.dataPrevisao || '');
+            card.setAttribute('data-status', processo.status);
 
-            const dateDisplay = isDone 
-                ? `<span class="card-done ml-2">CONCLUÍDO em ${formatDate(processo.dataConclusao)}</span>`
-                : (processo.dataPrevisao ? `<span class="card-date ml-2">Previsão: ${formatDate(processo.dataPrevisao)}</span>` : '');
+            const previsaoDisplay = formatDate(processo.dataPrevisao) || 'Indefinida';
+            const registroDisplay = formatDate(processo.dataRegistro) || 'Indefinida';
+            const conclusaoDisplay = formatDate(processo.dataConclusao); 
             
-            // 4. Cria a mensagem de alerta visual
-            const alertInfo = isDueTomorrow
-                ? `<div class="p-1.5 bg-red-100 text-red-700 font-bold rounded-md text-xs mt-2 flex items-center">
-                    <svg class="w-4 h-4 mr-1 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.564 2.87-1.564 3.635 0l3.097 6.338C15.772 10.368 15.016 11 14.12 11H5.88c-.896 0-1.652-.632-1.93-1.563l3.097-6.338zM19 19a1 1 0 01-1 1H2a1 1 0 010-2h16a1 1 0 011 1z" clip-rule="evenodd"></path></svg>
-                    PRAZO PRÓXIMO! Previsão para amanhã.
-                  </div>`
-                : '';
-
+            let conclusaoHtml = '';
+            if (conclusaoDisplay) {
+                const conclusaoText = isWithinCurrentWeek(processo.dataConclusao) ? 'Concluído Esta Semana' : 'Concluído em Histórico';
+                conclusaoHtml = `<span class="card-done text-xs" title="${conclusaoText}">✅ ${conclusaoDisplay}</span>`;
+            }
 
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-semibold uppercase text-slate-500">${processo.colaborador}</span>
+                    <div class="font-extrabold text-gray-800 text-base">${processo.nome}</div>
                     <div class="flex space-x-2">
-                        <button onclick="openEditModal('${processo.id}')" class="text-indigo-500 hover:text-indigo-700 p-1 rounded-full hover:bg-indigo-50 transition duration-150">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-9-6l9 9"></path></svg>
+                        <button onclick="openEditModal(${processo.id})" title="Editar Processo" class="text-gray-400 hover:text-indigo-600 transition duration-150 p-1 rounded-full focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </button>
-                        <button onclick="deleteProcess('${processo.id}')" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition duration-150">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <button onclick="deleteProcess(${processo.id})" title="Excluir Processo" class="text-gray-400 hover:text-red-600 transition duration-150 p-1 rounded-full focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
-                <h4 class="text-base font-bold text-gray-800 mb-1">${processo.processoNome}</h4>
-                <p class="text-gray-600 text-xs mb-3">${processo.detalhes.substring(0, 100)}...</p>
-                <div class="flex items-center text-xs text-gray-500 mt-2 border-t pt-2">
-                    <span class="font-medium mr-2">Reg.: ${formatDate(processo.dataRegistro)}</span>
-                    ${dateDisplay}
+                
+                <div class="flex justify-between items-center mb-2">
+                    <div class="text-xs text-gray-500">Colab: <span class="font-bold text-gray-700">${processo.colaborador}</span></div>
+                    <span class="card-date text-xs" title="Previsão de Conclusão">Prev.: ${previsaoDisplay}</span>
                 </div>
-                ${alertInfo}
+                
+                <div class="flex justify-between items-center mt-2 mb-2">
+                    <div class="text-xs text-gray-400">Registro: ${registroDisplay}</div>
+                    ${conclusaoHtml}
+                </div>
+                
+                <div class="text-gray-600 whitespace-pre-wrap mt-3 pt-3 border-t border-gray-100">${processo.detalhes}</div>
             `;
             return card;
         }
 
-        function renderKanban(filteredProcesses = processos) {
-            // Limpa todas as colunas
-            document.getElementById('column-tratamento').querySelectorAll('.task-card').forEach(c => c.remove());
-            document.getElementById('column-tratados').querySelectorAll('.task-card').forEach(c => c.remove());
-            document.getElementById('column-proximos').querySelectorAll('.task-card').forEach(c => c.remove());
-            document.getElementById('column-concluidos-historico').querySelectorAll('.task-card').forEach(c => c.remove());
+        function renderDashboard() {
+            // Lógica de renderização e ordenação do Kanban
+            const tratamento = [];
+            const tratadosSemana = [];
+            const proximos = [];
+            const historico = [];
 
-            // Seleciona os contêineres de coluna
-            const cols = {
-                tratamento: document.getElementById('column-tratamento'),
-                tratados: document.getElementById('column-tratados'),
-                proximos: document.getElementById('column-proximos'),
-                'concluidos-historico': document.getElementById('column-concluidos-historico')
-            };
-            
-            // Renderiza os cards nas colunas corretas
-            filteredProcesses.forEach(processo => {
-                let statusCol;
-                // Lógica de status para direcionamento do card
-                if (isWithinCurrentWeek(processo.dataConclusao)) {
-                    statusCol = 'tratados'; // Concluídos esta semana
-                } else if (processo.dataConclusao) {
-                    statusCol = 'concluidos-historico'; // Concluídos em outras datas
+            processos.forEach(processo => {
+                const isConcluido = !!processo.dataConclusao;
+
+                if (isConcluido) {
+                    // Se estiver concluído, verifica se é na semana atual
+                    if (isWithinCurrentWeek(processo.dataConclusao)) {
+                        tratadosSemana.push(processo);
+                    } else {
+                        historico.push(processo);
+                    }
                 } else {
-                    statusCol = processo.status; // Tratamento ou Próximos
-                }
-
-                if (cols[statusCol]) {
-                    cols[statusCol].appendChild(createCard(processo));
+                    // Se não estiver concluído, usa o status do processo
+                    switch (processo.status) {
+                        case 'proximos':
+                            proximos.push(processo);
+                            break;
+                        case 'tratamento':
+                        case 'tratados': // Se o status for 'tratados' mas não houver data de conclusão, trata como 'tratamento' para evitar erros visuais
+                        default:
+                            tratamento.push(processo);
+                            break;
+                    }
                 }
             });
             
-            console.log(`Kanban renderizado. ${filteredProcesses.length} processos visíveis.`);
-        }
-        
-        // ====================================================================
-        // 5. FORMULÁRIO E MODAL DE EDIÇÃO
-        // ====================================================================
-
-        document.getElementById('process-form').addEventListener('submit', handleFormSubmit);
-
-        function handleFormSubmit(event) {
-            event.preventDefault();
+            // ORDENAÇÃO: Histórico de Concluídos (Mais Recente Primeiro)
+            historico.sort((a, b) => {
+                if (!a.dataConclusao) return 1; 
+                if (!b.dataConclusao) return -1;
+                return b.dataConclusao.localeCompare(a.dataConclusao);
+            });
             
-            const newProcess = {
-                processoNome: document.getElementById('processo-nome').value.trim(),
-                colaborador: document.getElementById('colaborador').value,
-                status: document.getElementById('processo-status').value,
-                dataRegistro: document.getElementById('data-registro').value,
-                dataPrevisao: document.getElementById('data-previsao').value,
-                dataConclusao: document.getElementById('data-conclusao').value,
-                detalhes: document.getElementById('detalhes').value,
-                criadoEm: new Date().toISOString()
-            };
+            // Limpa e recria os títulos das colunas (mantendo o sticky header)
+            const columnTreatment = document.getElementById('column-tratamento');
+            const columnDoneWeek = document.getElementById('column-tratados');
+            const columnNext = document.getElementById('column-proximos');
+            const columnHistory = document.getElementById('column-concluidos-historico');
+            
+            columnTreatment.innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-orange-700 border-b-4 border-orange-300 flex items-center"><span class="mr-2 text-2xl">🔥</span> Em Tratamento</h3>';
+            columnDoneWeek.innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-emerald-600 border-b-4 border-emerald-300 flex items-center"><span class="mr-2 text-2xl">✨</span> Tratados na Semana</h3>';
+            columnNext.innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-indigo-600 border-b-4 border-indigo-300 flex items-center"><span class="mr-2 text-2xl">🚀</span> Próximos Processos</h3>';
+            columnHistory.innerHTML = '<h3 class="kanban-header-sticky text-xl font-extrabold text-slate-600 border-b-4 border-slate-300 flex items-center"><span class="mr-2 text-2xl">✅</span> Histórico de Concluídos</h3>';
 
-            if (!newProcess.processoNome || !newProcess.colaborador || !newProcess.dataRegistro) {
-                // Em um ambiente de produção, seria um modal de erro
-                console.error("Campos obrigatórios faltando!");
-                return;
-            }
+            tratamento.forEach(processo => columnTreatment.appendChild(createCard(processo)));
+            tratadosSemana.forEach(processo => columnDoneWeek.appendChild(createCard(processo)));
+            proximos.forEach(processo => columnNext.appendChild(createCard(processo)));
+            historico.forEach(processo => columnHistory.appendChild(createCard(processo)));
 
-            addOrUpdateProcess(newProcess);
-
-            // Limpa o formulário, mas mantém a data de registro de hoje
-            document.getElementById('process-form').reset();
-            document.getElementById('data-registro').value = getTodayDateString();
+            filterCards();
         }
 
         function openEditModal(id) {
             const processo = processos.find(p => p.id === id);
             if (!processo) {
-                console.error("Processo não encontrado para edição:", id);
+                console.error(`Processo com ID ${id} não encontrado para edição.`);
                 return;
             }
 
-            // Preenche o modal
             document.getElementById('edit-id').value = processo.id;
-            document.getElementById('edit-nome').value = processo.processoNome;
+            document.getElementById('edit-nome').value = processo.nome;
             document.getElementById('edit-colaborador').value = processo.colaborador;
             document.getElementById('edit-status').value = processo.status;
             document.getElementById('edit-data-registro').value = processo.dataRegistro;
-            document.getElementById('edit-data-previsao').value = processo.dataPrevisao;
-            document.getElementById('edit-data-conclusao').value = processo.dataConclusao;
+            document.getElementById('edit-data-previsao').value = processo.dataPrevisao || ''; 
+            document.getElementById('edit-data-conclusao').value = processo.dataConclusao || ''; 
             document.getElementById('edit-detalhes').value = processo.detalhes;
-            
+
             document.getElementById('edit-modal').classList.remove('hidden');
         }
 
@@ -862,269 +681,467 @@
             document.getElementById('edit-modal').classList.add('hidden');
         }
 
-        function handleEditSubmit(event) {
-            event.preventDefault();
+        function handleEditSubmit(e) {
+            e.preventDefault();
 
-            const id = document.getElementById('edit-id').value;
-            
-            const updatedProcess = {
-                processoNome: document.getElementById('edit-nome').value.trim(),
+            const id = parseInt(document.getElementById('edit-id').value);
+            const index = processos.findIndex(p => p.id === id);
+
+            if (index === -1) {
+                console.error(`Erro ao salvar: Processo com ID ${id} não encontrado.`);
+                return;
+            }
+
+            const dataPrevisao = document.getElementById('edit-data-previsao').value.trim();
+            const dataConclusao = document.getElementById('edit-data-conclusao').value.trim(); 
+
+            processos[index] = {
+                ...processos[index], 
                 colaborador: document.getElementById('edit-colaborador').value,
                 status: document.getElementById('edit-status').value,
+                nome: document.getElementById('edit-nome').value,
                 dataRegistro: document.getElementById('edit-data-registro').value,
-                dataPrevisao: document.getElementById('edit-data-previsao').value,
-                dataConclusao: document.getElementById('edit-data-conclusao').value,
-                detalhes: document.getElementById('edit-detalhes').value,
-                editadoEm: new Date().toISOString()
+                dataPrevisao: dataPrevisao, 
+                dataConclusao: dataConclusao, 
+                detalhes: document.getElementById('edit-detalhes').value || 'Nenhum detalhe fornecido.',
             };
 
-            addOrUpdateProcess(updatedProcess, id);
+            saveProcesses();
+            renderDashboard();
             closeEditModal();
+            console.log(`Processo ${id} editado com sucesso.`);
         }
 
 
-        // ====================================================================
-        // 6. FUNÇÕES DE FILTRO
-        // ====================================================================
+        function deleteProcess(id) {
+            const initialLength = processos.length;
+            processos = processos.filter(processo => processo.id !== id);
+
+            if (processos.length < initialLength) {
+                saveProcesses();
+                renderDashboard();
+                console.log(`Processo com ID ${id} excluído com sucesso.`);
+            } else {
+                console.warn(`Processo com ID ${id} não encontrado.`);
+            }
+        }
 
         function filterCards() {
-            const filterColaborador = document.getElementById('filter-colaborador').value;
+            const filterColab = document.getElementById('filter-colaborador').value;
             const filterDate = document.getElementById('filter-date').value;
+            const allCards = document.querySelectorAll('.task-card');
 
-            let filtered = processos.filter(p => {
-                // Filtro por Colaborador
-                const matchesColaborador = filterColaborador === 'todos' || p.colaborador === filterColaborador;
+            allCards.forEach(card => {
+                const cardColab = card.getAttribute('data-colaborador');
+                const cardPrevisao = card.getAttribute('data-previsao'); 
+                let matches = true;
 
-                // Filtro por Data (Previsão)
-                const matchesDate = !filterDate || (p.dataPrevisao === filterDate);
+                if (filterColab !== 'todos' && cardColab !== filterColab) {
+                    matches = false;
+                }
 
-                return matchesColaborador && matchesDate;
+                if (filterDate && cardPrevisao !== filterDate) {
+                    matches = false;
+                }
+
+                card.style.display = matches ? 'block' : 'none';
             });
-
-            renderKanban(filtered);
         }
-
+        
         function clearFilters() {
             document.getElementById('filter-colaborador').value = 'todos';
             document.getElementById('filter-date').value = '';
-            renderKanban(); 
+            filterCards();
         }
 
-        // ====================================================================
-        // 7. RELATÓRIO (RESTRIÇÃO DE ACESSO)
-        // ====================================================================
+        // Handler para o formulário principal
+        document.getElementById('process-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const dataPrevisaoValue = document.getElementById('data-previsao').value.trim();
+            const dataRegistroValue = document.getElementById('data-registro').value;
+            const dataConclusaoValue = document.getElementById('data-conclusao').value.trim(); 
+
+            const novoProcesso = {
+                colaborador: document.getElementById('colaborador').value,
+                status: document.getElementById('processo-status').value,
+                nome: document.getElementById('processo-nome').value,
+                dataRegistro: dataRegistroValue,
+                dataPrevisao: dataPrevisaoValue,
+                dataConclusao: dataConclusaoValue, 
+                detalhes: document.getElementById('detalhes').value || 'Nenhum detalhe fornecido.',
+                id: Date.now() 
+            };
+
+            processos.push(novoProcesso);
+            saveProcesses();
+            renderDashboard();
+            
+            // Limpa o formulário após a submissão
+            document.getElementById('processo-nome').value = '';
+            document.getElementById('data-previsao').value = ''; 
+            document.getElementById('data-conclusao').value = ''; 
+            document.getElementById('detalhes').value = '';
+            document.getElementById('data-registro').value = getTodayDateString(); 
+        });
+
+        // ------------------ Funções de Inicialização (Kanban) ------------------
         
+        // ====================================================================
+        // DADOS INICIAIS DE PROCESSOS USANDO A LISTA DE COLABORADORES
+        // ====================================================================
+        function setInitialKanbanData() {
+            if (processos.length === 0) {
+                const today = getTodayDateString();
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]; 
+                const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0]; 
+                const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+                const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+                const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
+
+                processos = [
+                    { colaborador: 'Beatriz', status: 'tratamento', nome: 'Análise de Relatório de Custos', dataRegistro: yesterday, dataPrevisao: today, dataConclusao: '', detalhes: 'Revisando as despesas de TI e Pessoal. Prioridade alta.', id: 1 },
+                    { colaborador: 'Diego', status: 'tratados', nome: 'Migração de Servidor Cloud', dataRegistro: twoDaysAgo, dataPrevisao: yesterday, dataConclusao: today, detalhes: 'Migração para novo ambiente AWS concluída com sucesso e documentada.', id: 2 },
+                    { colaborador: 'Mariane', status: 'tratados', nome: 'Fechamento Contábil do Mês', dataRegistro: twoDaysAgo, dataPrevisao: lastWeek, dataConclusao: twoDaysAgo, detalhes: 'Fechamento finalizado e documentos enviados ao setor financeiro.', id: 6 },
+                    { colaborador: 'Felipe', status: 'tratados', nome: 'Revisão Contratual Cliente Gama', dataRegistro: lastWeek, dataPrevisao: lastWeek, dataConclusao: twoWeeksAgo, detalhes: 'Contrato revisto e assinado. Processo de arquivamento finalizado.', id: 5 },
+                    { colaborador: 'Emily', status: 'proximos', nome: 'Planejamento de Campanha Q4', dataRegistro: today, dataPrevisao: nextWeek, dataConclusao: '', detalhes: 'Definir budget, criar criativos e segmentar público-alvo.', id: 3 },
+                    { colaborador: 'João', status: 'tratamento', nome: 'Atendimento Cliente Y (Chamado 456)', dataRegistro: today, dataPrevisao: '', dataConclusao: '', detalhes: 'Aguardando feedback do cliente sobre a proposta enviada.', id: 4 },
+                    { colaborador: 'Hosana', status: 'tratamento', nome: 'Configuração de VPN para Cliente Z', dataRegistro: twoDaysAgo, dataPrevisao: today, dataConclusao: '', detalhes: 'Problema de conectividade intermitente a ser resolvido. Testes pendentes.', id: 7 },
+                    { colaborador: 'Rebeca', status: 'proximos', nome: 'Auditoria de Processos Internos', dataRegistro: today, dataPrevisao: nextWeek, dataConclusao: '', detalhes: 'Preparar documentação para auditoria do próximo mês. Prioridade média.', id: 8 },
+                    { colaborador: 'Tairane', status: 'tratamento', nome: 'Desenvolvimento de Novo Módulo (Fase 1)', dataRegistro: yesterday, dataPrevisao: nextWeek, dataConclusao: '', detalhes: 'Codificação inicial do módulo de relatórios avançados.', id: 9 },
+                    { colaborador: 'Thais', status: 'tratados', nome: 'Treinamento de Novas Ferramentas', dataRegistro: twoWeeksAgo, dataPrevisao: twoWeeksAgo, dataConclusao: lastWeek, detalhes: 'Sessão de treinamento de 3 dias para a equipe de vendas concluída.', id: 10 },
+                ];
+                // Salva os dados iniciais no localStorage
+                saveProcesses();
+            }
+        }
+        
+        // ------------------ Lógica de Acesso e Relatório (Firebase e Kanban Local) ------------------
+
         function openReportModal() {
             reportModal.classList.remove('hidden');
-            // Garante que a tela de login/display correta seja mostrada ao abrir
+            // Se já estiver autenticado, vai direto para o relatório
             if (isReportAuthenticated) {
-                showReportDisplay();
+                toggleReportView(true);
             } else {
-                showReportLogin();
+                toggleReportView(false);
             }
         }
 
         function closeReportModal() {
             reportModal.classList.add('hidden');
-            reportUserPinInput.value = ''; // Limpa o PIN ao fechar
+            displayReportMessage('', 'info'); // Limpa mensagens
         }
 
-        function showReportLogin() {
-            reportLoginSection.classList.remove('hidden');
-            reportDisplaySection.classList.add('hidden');
-            reportButtonText.textContent = "Extrair Relatório";
-            reportLoadingSpinner.classList.add('hidden');
+        function toggleReportView(loggedIn) {
+            isReportAuthenticated = loggedIn;
+            if (loggedIn) {
+                reportLoginSection.classList.add('hidden');
+                reportDisplaySection.classList.remove('hidden');
+                renderReport(); // Chama o relatório usando dados LOCAIS (processos)
+            } else {
+                reportDisplaySection.classList.add('hidden');
+                reportLoginSection.classList.remove('hidden');
+                reportUserNameInput.value = '';
+                reportUserPinInput.value = '';
+            }
         }
 
-        function showReportDisplay() {
-            reportLoginSection.classList.add('hidden');
-            reportDisplaySection.classList.remove('hidden');
-            generateReportTable();
-        }
-        
-        async function handleReportAuthentication(event) {
-            event.preventDefault();
+        // NOVO: Renderiza o relatório com base nos dados ATUAIS do Kanban
+        function renderReport() {
+            // 1. Usa a lista global 'processos'
+            if (processos.length === 0) {
+                reportContent.innerHTML = '<p class="text-gray-500 italic text-center mt-8">Nenhum processo registrado no Dashboard para relatório.</p>';
+                return;
+            }
+
+            // 2. Cálculos das Métricas
+            const totalProcessos = processos.length;
             
+            const concluidosEstaSemana = processos.filter(p => isWithinCurrentWeek(p.dataConclusao));
+            const totalConcluidosSemana = concluidosEstaSemana.length;
+
+            const emTratamento = processos.filter(p => p.status === 'tratamento' && !p.dataConclusao);
+            const totalEmTratamento = emTratamento.length;
+
+            const proximos = processos.filter(p => p.status === 'proximos' && !p.dataConclusao);
+            const totalProximos = proximos.length;
+
+            // 3. Montagem do HTML do Relatório
+            let html = `
+                <div class="space-y-6">
+                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2 text-report">Resumo de Performance (Visão Geral)</h3>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <!-- Card Total -->
+                        <div class="bg-gray-50 p-4 rounded-xl shadow-md border-b-4 border-gray-400">
+                            <p class="text-4xl font-extrabold text-gray-700">${totalProcessos}</p>
+                            <p class="text-sm font-semibold text-gray-500 mt-1">Total de Processos Registrados</p>
+                        </div>
+                        <!-- Card Concluídos Semana -->
+                        <div class="bg-emerald-50 p-4 rounded-xl shadow-md border-b-4 border-emerald-500">
+                            <p class="text-4xl font-extrabold text-emerald-600">${totalConcluidosSemana}</p>
+                            <p class="text-sm font-semibold text-emerald-700 mt-1">Concluídos Esta Semana (Meta)</p>
+                        </div>
+                        <!-- Card Em Tratamento -->
+                        <div class="bg-orange-50 p-4 rounded-xl shadow-md border-b-4 border-orange-500">
+                            <p class="text-4xl font-extrabold text-orange-600">${totalEmTratamento}</p>
+                            <p class="text-sm font-semibold text-orange-700 mt-1">Atualmente em Tratamento</p>
+                        </div>
+                        <!-- Card Próximos -->
+                        <div class="bg-indigo-50 p-4 rounded-xl shadow-md border-b-4 border-indigo-500">
+                            <p class="text-4xl font-extrabold text-indigo-600">${totalProximos}</p>
+                            <p class="text-sm font-semibold text-indigo-700 mt-1">Próximos na Fila</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2 pt-4 text-report">Detalhes: Processos Concluídos na Semana</h3>
+                </div>
+            `;
+
+            if (totalConcluidosSemana === 0) {
+                html += '<p class="text-gray-500 italic text-center mt-4">Nenhum processo concluído na semana atual. Foque na meta!</p>';
+            } else {
+                // Ordena por data de conclusão (mais recente primeiro)
+                concluidosEstaSemana.sort((a, b) => b.dataConclusao.localeCompare(a.dataConclusao));
+
+                html += `
+                    <table class="min-w-full divide-y divide-gray-200 mt-4">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Processo</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colaborador</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reg.</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concluído em</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100">
+                `;
+
+                concluidosEstaSemana.forEach(p => {
+                    html += `
+                        <tr>
+                            <td class="px-3 py-2 text-sm font-medium text-gray-900">${p.nome}</td>
+                            <td class="px-3 py-2 text-sm text-gray-600 font-bold">${p.colaborador}</td>
+                            <td class="px-3 py-2 text-sm text-gray-600">${formatDate(p.dataRegistro)}</td>
+                            <td class="px-3 py-2 text-sm">
+                                <span class="bg-emerald-100 text-emerald-800 px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                    ${formatDate(p.dataConclusao)}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            reportContent.innerHTML = html;
+        }
+
+        // Função de normalização de nome APERFEIÇOADA (ignora acentos, caixa alta/baixa e o prefixo "dra. ")
+        const normalizeName = (n) => n
+            .toLowerCase()
+            .normalize("NFD") // Decomposição de caracteres (para separar acentos)
+            .replace(/[\u0300-\u036f]/g, "") // Remove acentos (diacríticos)
+            .replace('dra. ', '') // Remove prefixo 'dra. '
+            .trim(); 
+
+        function handleReportAuthentication() {
+            // CORREÇÃO ESSENCIAL: Usa .trim() para remover quaisquer espaços acidentais no início/fim
             const name = reportUserNameInput.value.trim();
             const pin = reportUserPinInput.value.trim();
 
-            if (!name || pin.length !== 6) {
-                displayReportMessage("Nome ou PIN (6 caracteres) inválido.", 'error');
+            if (!name || !pin) {
+                displayReportMessage("Por favor, preencha o Nome e a Senha (PIN).", 'error');
                 return;
             }
-
-            // Ativa o loading
-            extractReportButton.disabled = true;
-            reportButtonText.textContent = "Verificando...";
-            reportLoadingSpinner.classList.remove('hidden');
-
-            // Simulação de verificação de PIN
-            const user = authorizedUsers.find(u => u.name.toLowerCase() === name.toLowerCase() && u.pin === pin);
-
-            // Aguarda um pouco para simular o processo (melhora a UX)
-            await new Promise(resolve => setTimeout(resolve, 1500)); 
-
-            if (user) {
-                isReportAuthenticated = true;
-                displayReportMessage(`Acesso concedido para ${user.name}! Gerando relatório...`, 'success');
-                showReportDisplay();
-            } else {
-                isReportAuthenticated = false;
-                displayReportMessage("Credenciais de acesso negadas. Verifique o nome e PIN.", 'error');
-                showReportLogin(); // Volta para a tela de login
-            }
             
-            extractReportButton.disabled = false;
-            reportLoadingSpinner.classList.add('hidden');
+            reportLoadingSpinner.classList.remove('hidden');
+            reportButtonText.textContent = 'Verificando...';
+            extractReportButton.disabled = true;
+
+            const normalizedInputName = normalizeName(name);
+
+            // Usa a lista global atualizada pelo listener (ou a lista padrão se o listener ainda não rodou)
+            const user = authorizedUsers.find(u => {
+                const normalizedStoredName = normalizeName(u.name);
+                // Compara o nome normalizado E o PIN EXATO (case-sensitive)
+                return normalizedStoredName === normalizedInputName && u.pin === pin;
+            });
+            
+            // Simula a verificação de credenciais com um pequeno atraso
+            setTimeout(() => { 
+                reportLoadingSpinner.classList.add('hidden');
+                reportButtonText.textContent = 'Extrair Relatório';
+                extractReportButton.disabled = false;
+
+                if (user) {
+                    displayReportMessage(`Acesso concedido. Bem-vinda, ${user.name}!`, 'success');
+                    toggleReportView(true); // Se autenticado, chama toggleReportView(true)
+                } else {
+                    displayReportMessage("Nome ou Senha (PIN) incorretos. Acesso negado. Use o 'olho' para verificar a senha.", 'error');
+                }
+            }, 800);
         }
         
         function handleReportLogout() {
-            isReportAuthenticated = false;
-            displayReportMessage("Relatório bloqueado com sucesso.", 'info');
-            showReportLogin();
+             displayReportMessage("Sessão encerrada. Relatório bloqueado.", 'info');
+             toggleReportView(false);
         }
 
-        function generateReportTable() {
-            if (!isReportAuthenticated) {
-                reportContent.innerHTML = `<p class="text-center text-red-500 font-semibold mt-4">Acesso não autorizado. Por favor, faça login.</p>`;
+        /**
+         * NOVO: Converte os dados do Kanban em CSV e inicia o download.
+         */
+        function downloadReportAsCsv() {
+            if (processos.length === 0) {
+                displayReportMessage('Não há dados para exportar.', 'info');
                 return;
             }
+
+            const headers = ['ID', 'Nome do Processo', 'Colaborador', 'Status', 'Data de Registro', 'Data de Previsao', 'Data de Conclusao', 'Detalhes'];
             
-            if (processos.length === 0) {
-                 reportContent.innerHTML = `<p class="text-center text-gray-500 font-semibold mt-4">Nenhum processo registrado para gerar o relatório.</p>`;
+            // Usa ponto e vírgula (;) como separador para melhor compatibilidade com o Excel em configurações regionais PT-BR
+            let csv = headers.join(';') + '\n'; 
+
+            processos.forEach(p => {
+                // Função para formatar o texto para CSV (escapa aspas duplas, garante string)
+                const csvSafe = (text) => `"${(text || '').toString().replace(/"/g, '""')}"`;
+                
+                const row = [
+                    csvSafe(p.id),
+                    csvSafe(p.nome),
+                    csvSafe(p.colaborador),
+                    csvSafe(p.status),
+                    p.dataRegistro || '',
+                    p.dataPrevisao || '',
+                    p.dataConclusao || '',
+                    csvSafe(p.detalhes)
+                ];
+                csv += row.join(';') + '\n';
+            });
+
+            // Byte Order Mark (BOM) para garantir que o Excel abra corretamente com UTF-8
+            const BOM = "\uFEFF"; 
+            const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.setAttribute('download', `relatorio_processos_${getTodayDateString()}.csv`);
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            
+            // Inicia o download
+            a.click();
+            
+            // Limpa recursos
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            displayReportMessage('Relatório CSV baixado com sucesso!', 'success');
+        }
+
+
+        // ------------------ Funções de Inicialização (Firebase) ------------------
+
+        async function initializeFirebase() {
+            if (!firebaseConfig.apiKey) {
+                 console.error("Firebase Configuração Inválida. Apenas o Kanban funcionará.");
+                 extractReportButton.disabled = false;
+                 reportButtonText.textContent = 'Extrair Relatório';
                  return;
             }
 
-            // Cria o cabeçalho da tabela
-            let tableHtml = `
-                <div class="shadow-lg rounded-xl overflow-hidden mb-4">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-report-primary text-white sticky top-0">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">ID</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Nome</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Colaborador</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Reg.</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Prev.</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Conc.</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Detalhes</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-            `;
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
 
-            // Adiciona as linhas (ordenadas por data de registro)
-            processos.forEach(p => {
-                const statusText = p.dataConclusao 
-                    ? (isWithinCurrentWeek(p.dataConclusao) ? 'Concluído na Semana' : 'Concluído Histórico') 
-                    : (p.status === 'proximos' ? 'Próximo' : 'Em Tratamento');
-                    
-                const statusClass = p.dataConclusao 
-                    ? (isWithinCurrentWeek(p.dataConclusao) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')
-                    : (p.status === 'proximos' ? 'bg-indigo-100 text-indigo-800' : 'bg-orange-100 text-orange-800');
+                // Autenticação usando o token inicial ou anônima
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
 
-                tableHtml += `
-                    <tr>
-                        <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500">${p.id.substring(0, 6)}...</td>
-                        <td class="px-4 py-3 text-sm font-medium text-gray-900">${p.processoNome}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">${p.colaborador}</td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                                ${statusText}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(p.dataRegistro)}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${p.dataPrevisao ? formatDate(p.dataPrevisao) : '-'}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${p.dataConclusao ? formatDate(p.dataConclusao) : '-'}</td>
-                        <td class="px-4 py-3 text-sm text-gray-500 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">${p.detalhes || '-'}</td>
-                    </tr>
-                `;
-            });
-
-            tableHtml += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            
-            reportContent.innerHTML = tableHtml;
-        }
-        
-        /**
-         * NOVO: Baixa o relatório completo em formato CSV.
-         */
-        function downloadReportAsCsv() {
-            if (!isReportAuthenticated || processos.length === 0) {
-                displayReportMessage("Não é possível baixar: acesso não autorizado ou sem dados.", 'error');
-                return;
-            }
-
-            const headers = [
-                "ID", "Nome do Processo", "Colaborador", "Status Kanban", 
-                "Data de Registro", "Data de Previsão", "Data de Conclusão", "Detalhes"
-            ];
-
-            let csv = headers.join(";") + "\n";
-
-            processos.forEach(p => {
-                const statusText = p.dataConclusao 
-                    ? (isWithinCurrentWeek(p.dataConclusao) ? 'Concluído na Semana' : 'Concluído Histórico') 
-                    : (p.status === 'proximos' ? 'Próximo' : 'Em Tratamento');
-                    
-                const row = [
-                    `"${p.id}"`,
-                    `"${p.processoNome.replace(/"/g, '""')}"`,
-                    `"${p.colaborador}"`,
-                    `"${statusText}"`,
-                    `"${p.dataRegistro}"`,
-                    `"${p.dataPrevisao || ''}"`,
-                    `"${p.dataConclusao || ''}"`,
-                    `"${(p.detalhes || '').replace(/"/g, '""')}"`
-                ].join(";");
+                setupReportDataListener();
                 
-                csv += row + "\n";
-            });
+            } catch (error) {
+                console.error("Erro ao inicializar Firebase:", error);
+                displayReportMessage(`Falha ao conectar ao sistema de segurança.`, 'error');
+            }
+        }
 
-            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Relatorio_Processos_${getTodayDateString()}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            displayReportMessage("Relatório CSV baixado com sucesso!", 'success');
+        function setupReportDataListener() {
+            // Caminho para dados públicos e compartilhados: /artifacts/{appId}/public/data/authorized_users/config
+            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'authorized_users', 'config');
+
+            const initialConfig = {
+                // Usa a constante global para os dados iniciais
+                users: initialAuthorizedUsers,
+            };
+
+            // Garante que o documento exista no Firestore
+            setDoc(configRef, initialConfig, { merge: true })
+                .catch(err => console.error("Erro ao garantir dados iniciais de configuração:", err));
+
+            // Listener para monitorar a lista de usuários
+            onSnapshot(configRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    // Atualiza a lista global com os dados do Firestore
+                    authorizedUsers = data.users || initialAuthorizedUsers;
+                    
+                    extractReportButton.disabled = false;
+                    reportButtonText.textContent = 'Extrair Relatório';
+                } else {
+                    // Se o documento não existe, usa os dados default
+                    authorizedUsers = initialAuthorizedUsers;
+                }
+            }, (error) => {
+                console.error("Erro no listener de dados de Usuários:", error);
+                // Em caso de erro, garante que a lista default ainda esteja disponível
+                authorizedUsers = initialAuthorizedUsers;
+            });
         }
 
 
-        // ====================================================================
-        // INICIALIZAÇÃO
-        // ====================================================================
+        // Event Listeners (Relatório)
+        extractReportButton.addEventListener('click', handleReportAuthentication);
+        reportUserPinInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !extractReportButton.disabled) {
+                handleReportAuthentication();
+            }
+        });
 
-        window.onload = function () {
-            // Expõe funções globais para o HTML
-            window.filterCards = filterCards;
-            window.clearFilters = clearFilters;
-            window.openEditModal = openEditModal;
-            window.closeEditModal = closeEditModal;
-            window.handleEditSubmit = handleEditSubmit;
-            window.deleteProcess = deleteProcess;
-            window.openReportModal = openReportModal;
-            window.closeReportModal = closeReportModal;
-            window.handleReportAuthentication = handleReportAuthentication;
-            window.handleReportLogout = handleReportLogout;
-            window.togglePinVisibility = togglePinVisibility;
-            window.downloadReportAsCsv = downloadReportAsCsv;
 
-            // Inicializa a UI do formulário
+        // Inicialização Principal
+        document.addEventListener('DOMContentLoaded', () => {
             setupCollaboratorSelects(); 
-            
-            // Inicializa o Firebase e começa a ouvir o Firestore
-            initializeFirebase();
-        };
+            loadProcesses(); 
+            setInitialKanbanData(); // Define os dados iniciais se não houver dados salvos no localStorage
+            renderDashboard(); 
+            initializeFirebase(); // Inicializa o Firebase para a função de relatório
+        });
+
+        // ==========================================================
+        // CORREÇÃO DE ESCOPO: Expondo funções para os eventos onclick
+        // ==========================================================
+        window.openEditModal = openEditModal;
+        window.closeEditModal = closeEditModal;
+        window.handleEditSubmit = handleEditSubmit;
+        window.deleteProcess = deleteProcess;
+        window.filterCards = filterCards;
+        window.clearFilters = clearFilters;
+        window.openReportModal = openReportModal;
+        window.closeReportModal = closeReportModal;
+        window.handleReportLogout = handleReportLogout;
+        window.downloadReportAsCsv = downloadReportAsCsv; 
+        window.togglePinVisibility = togglePinVisibility; // NOVO: Função para o toggle de PIN
 
     </script>
 </body>
