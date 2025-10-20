@@ -131,7 +131,7 @@
         <h2 class="text-xl font-bold text-slate-700 col-span-full md:col-span-6 border-b pb-2">Ferramentas e Filtros:</h2>
 
         <!-- Filtro por Colaborador -->
-        <div class="col-span-full sm:col-span-2 lg:col-span-2">
+        <div class="col-span-full sm:col-span-2">
             <label for="filter-colaborador" class="text-sm font-medium text-gray-600 mb-1">Filtrar por Colaborador</label>
             <select id="filter-colaborador" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 shadow-inner w-full">
                 <option value="todos" class="font-bold">Todos os Colaboradores</option>
@@ -139,21 +139,27 @@
             </select>
         </div>
 
-        <!-- Filtro por Data (Previsão de Conclusão) -->
-        <div class="col-span-full sm:col-span-2 lg:col-span-2">
-            <label for="filter-date" class="text-sm font-medium text-gray-600 mb-1">Filtrar por Data (Previsão)</label>
-            <input type="date" id="filter-date" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 shadow-inner w-full">
+        <!-- NOVO: Filtro por Período (Previsão de Conclusão) -->
+        <div class="col-span-full sm:col-span-2 grid grid-cols-2 gap-2">
+            <div>
+                <label for="filter-date-start" class="text-sm font-medium text-gray-600 mb-1">Previsão (Início)</label>
+                <input type="date" id="filter-date-start" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 shadow-inner w-full">
+            </div>
+            <div>
+                <label for="filter-date-end" class="text-sm font-medium text-gray-600 mb-1">Previsão (Fim)</label>
+                <input type="date" id="filter-date-end" onchange="filterCards()" class="p-2 border-2 border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 shadow-inner w-full">
+            </div>
         </div>
 
         <!-- Botão Limpar Filtros -->
-        <div class="col-span-full sm:col-span-1 lg:col-span-1">
+        <div class="col-span-full sm:col-span-1">
             <button onclick="clearFilters()" class="bg-gray-700 text-white hover:bg-gray-800 px-4 py-2 rounded-xl font-semibold transition duration-200 shadow-md min-h-[44px] w-full mt-4 sm:mt-0">
                 Limpar Filtros
             </button>
         </div>
 
         <!-- Botão de Extração de Relatório (Restrito) -->
-        <div class="col-span-full sm:col-span-1 lg:col-span-1">
+        <div class="col-span-full sm:col-span-1">
             <button onclick="openReportModal()" class="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-xl font-bold transition duration-200 shadow-md min-h-[44px] w-full mt-4 sm:mt-0">
                 Extrair Relatório (🔒)
             </button>
@@ -783,22 +789,51 @@
             }
         }
 
+        /**
+         * Filtra os cards do Kanban por Colaborador e por Período de Previsão de Conclusão.
+         */
         function filterCards() {
             const filterColab = document.getElementById('filter-colaborador').value;
-            const filterDate = document.getElementById('filter-date').value;
+            // NOVOS FILTROS DE DATA
+            const filterDateStartStr = document.getElementById('filter-date-start').value;
+            const filterDateEndStr = document.getElementById('filter-date-end').value;
+            
+            // Converte as datas de filtro para objetos Date
+            const filterDateStart = filterDateStartStr ? new Date(filterDateStartStr + 'T00:00:00') : null;
+            // Garante que o filtro final inclua todo o dia, ajustando para 23:59:59
+            const filterDateEnd = filterDateEndStr ? new Date(filterDateEndStr + 'T23:59:59') : null; 
+
             const allCards = document.querySelectorAll('.task-card');
 
             allCards.forEach(card => {
                 const cardColab = card.getAttribute('data-colaborador');
-                const cardPrevisao = card.getAttribute('data-previsao'); 
+                const cardPrevisaoStr = card.getAttribute('data-previsao'); // YYYY-MM-DD
                 let matches = true;
 
+                // 1. Filtro por Colaborador
                 if (filterColab !== 'todos' && cardColab !== filterColab) {
                     matches = false;
                 }
+                
+                // 2. Filtro por Período de Data (Previsão)
+                if (matches && (filterDateStart || filterDateEnd)) {
+                    if (!cardPrevisaoStr) {
+                        // Se há filtro de data, mas o card não tem previsão, ele não corresponde
+                        matches = false; 
+                    } else {
+                        // Converte a data de previsão do card para um objeto Date
+                        const cardPrevisao = new Date(cardPrevisaoStr + 'T00:00:00');
+                        
+                        // Verifica se a data do card está APÓS ou IGUAL ao início (ou se o início não foi definido)
+                        const isAfterStart = !filterDateStart || cardPrevisao >= filterDateStart;
+                        
+                        // Verifica se a data do card está ANTES ou IGUAL ao fim (ou se o fim não foi definido)
+                        const isBeforeEnd = !filterDateEnd || cardPrevisao <= filterDateEnd;
 
-                if (filterDate && cardPrevisao !== filterDate) {
-                    matches = false;
+                        if (!(isAfterStart && isBeforeEnd)) {
+                            matches = false;
+                        }
+                    }
                 }
 
                 card.style.display = matches ? 'block' : 'none';
@@ -807,7 +842,8 @@
         
         function clearFilters() {
             document.getElementById('filter-colaborador').value = 'todos';
-            document.getElementById('filter-date').value = '';
+            document.getElementById('filter-date-start').value = ''; // Limpa a data de início
+            document.getElementById('filter-date-end').value = '';   // Limpa a data de fim
             filterCards();
         }
 
